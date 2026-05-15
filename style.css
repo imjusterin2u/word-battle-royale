@@ -1,0 +1,328 @@
+/* ============================================================
+   Word Battle Royale — style.css
+   Ported from WBR-Index inline styles
+   ============================================================ */
+
+:root {
+  --bg:      #06101f;
+  --card:    #0e1d35;
+  --border:  #1e3254;
+  --text:    #e2e8f0;
+  --muted:   #8899aa;
+  --accent:  #f0c040;
+  --danger:  #e05555;
+  --success: #3ecf7a;
+  --pill:    #172034;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  padding: 16px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+h1 { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+h2 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+h3 { font-size: 17px; font-weight: 700; margin: 12px 0 8px; }
+
+.subtitle {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+/* ── Cards ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 14px;
+}
+
+.card.dark { background: #121a2d; }
+
+/* ── Inputs ── */
+.input {
+  background: #0a1628;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 14px;
+  min-width: 180px;
+}
+
+.input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+select.input { cursor: pointer; }
+
+/* ── Buttons ── */
+button {
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: opacity .15s;
+}
+
+button:hover { opacity: .85; }
+button:disabled { opacity: .4; cursor: not-allowed; }
+
+.primary {
+  background: var(--accent);
+  color: #06101f;
+  border: none;
+  padding: 10px 14px;
+  font-weight: 800;
+}
+
+.secondary {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 12px;
+}
+
+.secondary.small, .primary.small {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  padding: 6px 10px;
+}
+
+/* ── HUD ── */
+.hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.status {
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: .06em;
+}
+
+/* ── Scoreboard ── */
+.scoreboard {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.team {
+  flex: 1;
+  min-width: 160px;
+  background: #091422;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.team .name {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.team .stats {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ── Shop ── */
+.shop {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+
+/* ── Tiles ── */
+.tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
+  min-height: 44px;
+  background: #091422;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.tile {
+  background: #1a3050;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: grab;
+  user-select: none;
+  transition: background .1s, transform .1s;
+}
+
+.tile:hover  { background: #244070; }
+.tile:active { cursor: grabbing; transform: scale(1.08); }
+.tile.digraph { background: #1a2e50; border-color: #2e5080; }
+
+.dropZone {
+  min-height: 52px;
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  padding: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  transition: border-color .15s;
+}
+
+.dropZone.over { border-color: var(--accent); }
+.hint { color: var(--muted); font-size: 13px; pointer-events: none; }
+
+/* Multisyllabic grid */
+.syllGrid {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.syllCol {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 80px;
+}
+
+.syllLabel {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.syllDrop {
+  min-height: 52px;
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* Affix chips */
+.chip {
+  background: var(--pill);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.prefixSuffixRow { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.prefixBox, .suffixBox { display: flex; align-items: center; gap: 6px; }
+
+/* ── Options (multiple choice) ── */
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.option-btn {
+  background: #0f1f38;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background .1s, border-color .1s;
+}
+
+.option-btn:hover   { background: #1a3050; border-color: var(--accent); }
+.option-btn.correct { background: #0d3020; border-color: var(--success); color: var(--success); }
+.option-btn.wrong   { background: #2a0f0f; border-color: var(--danger);  color: var(--danger); }
+
+/* ── Banner ── */
+.banner {
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 700;
+  font-size: 15px;
+  margin: 8px 0;
+  text-align: center;
+}
+
+.banner.correct { background: #0d3020; color: var(--success); border: 1px solid var(--success); }
+.banner.wrong   { background: #2a0f0f; color: var(--danger);  border: 1px solid var(--danger);  }
+
+/* ── Utility layout ── */
+.row        { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.row-inline { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.label      { font-size: 13px; color: var(--muted); min-width: 80px; }
+.badge      { background: var(--pill); border: 1px solid #375074; border-radius: 999px; padding: 4px 8px; font-weight: 700; font-size: 12px; }
+
+/* ── Word list ── */
+.wordlist-wrapper { border-top: 1px solid var(--border); padding-top: 8px; margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.wordlist-header  { display: flex; justify-content: space-between; align-items: center; }
+.wordlist-box     { min-height: 32px; display: flex; flex-wrap: wrap; gap: 6px; }
+
+.pill {
+  background: var(--pill);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ── Wrap-up table ── */
+.wraptable { margin-top: 10px; }
+
+.wraptable table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.wraptable th, .wraptable td { padding: 6px 10px; border-bottom: 1px solid var(--border); text-align: left; }
+.wraptable th { color: var(--muted); font-weight: 600; }
+
+/* ── Listen status ── */
+.listen-status { font-size: 13px; color: var(--muted); }
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  body { padding: 10px; }
+  .scoreboard { flex-direction: column; }
+  h1 { font-size: 20px; }
+}

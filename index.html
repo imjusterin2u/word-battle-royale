@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Word Battle Royale — Lesson Mode</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+  <!-- ── MENU ── -->
+  <section id="menu" class="card">
+    <h1>⚔️ Word Battle Royale</h1>
+    <p class="subtitle">Wilson Reading System — Lesson Mode</p>
+
+    <div class="row-inline">
+      <label class="label">Your name</label>
+      <input id="name" placeholder="Teacher / student name" class="input"/>
+    </div>
+
+    <div class="row-inline">
+      <label class="label">Step</label>
+      <select id="step" class="input">
+        <option value="1.3">Step 1.3</option>
+        <option value="1.4">Step 1.4</option>
+        <option value="2.1" selected>Step 2.1</option>
+        <option value="3.1">Step 3.1</option>
+      </select>
+    </div>
+
+    <div class="row-inline">
+      <label class="label">Custom tiles (optional, comma-separated)</label>
+      <input id="customTiles" placeholder="e.g. bl, cr, str" class="input"/>
+    </div>
+
+    <!-- Word list display -->
+    <div class="wordlist-wrapper">
+      <div class="wordlist-header">
+        <span class="label">Word bank for selected step</span>
+        <span id="wordCount" class="badge">—</span>
+      </div>
+      <div class="wordlist-box" id="wordlistBox"></div>
+    </div>
+
+    <div class="row-inline" style="margin-top:14px;">
+      <button id="startBtn" class="primary" type="button">Start Lesson</button>
+      <button id="battleBtn" class="secondary" type="button">⚔️ Battle Mode</button>
+    </div>
+  </section>
+
+  <!-- ── GAME ── -->
+  <section id="game" class="card" style="display:none;">
+
+    <!-- HUD -->
+    <div class="hud">
+      <div>Room: <span id="rid">—</span></div>
+      <div>Round: <span id="rnd">1</span> / <span id="roundTotal">10</span></div>
+      <div class="status" id="gstatus">waiting</div>
+    </div>
+
+    <!-- Scoreboard -->
+    <div class="scoreboard">
+      <div class="team">
+        <div class="name">You</div>
+        <div class="stats">
+          <span id="p1Pts">Pts: 0</span> ·
+          <span id="p1Coins">Coins: 100</span> ·
+          <span id="p1Army">Army: 10</span>
+        </div>
+      </div>
+      <div class="team">
+        <div class="name" id="p2Name">Opponent</div>
+        <div class="stats">
+          <span id="p2Pts">Pts: 0</span> ·
+          <span id="p2Coins">Coins: 100</span> ·
+          <span id="p2Army">Army: 10</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shop -->
+    <div class="shop row" style="gap:12px;align-items:flex-start;flex-wrap:wrap;">
+      <div><strong>Shop:</strong></div>
+      <button class="secondary small" id="buySoldier" type="button">Buy Soldier (20c, +1 army)</button>
+      <button class="secondary small" id="buyKnight"  type="button">Buy Knight (50c, +3 army)</button>
+      <button class="primary small"   id="attackBtn"  type="button">💥 Surprise Attack (40c)</button>
+      <span id="shopMsg"></span>
+      <span id="attackMsg"></span>
+    </div>
+
+    <!-- Battle status -->
+    <div id="battleBox" class="card dark" style="display:none;">
+      <div><strong>🏆 SPEED BATTLE:</strong> First correct within <span id="battleSeconds">20</span>s steals coins &amp; soldiers!</div>
+      <div id="battleTimer" style="margin-top:4px;opacity:.8;">Time left: <span id="btLeft">—</span>s</div>
+    </div>
+
+    <!-- Attack status -->
+    <div id="attackBox" class="card dark" style="display:none;">
+      <div><strong>💥 Surprise Attack!</strong> You are the defender — answer fast.</div>
+      <div id="attackTimer" style="margin-top:4px;opacity:.8;">Time left: <span id="atLeft">—</span>s</div>
+    </div>
+
+    <!-- Prompt -->
+    <h3 id="prompt">—</h3>
+
+    <!-- Tile UI (word construction) -->
+    <div id="tileUI" style="display:none;">
+      <div class="prefixSuffixRow" id="affixRow" style="display:flex;gap:10px;align-items:center;margin-bottom:6px;">
+        <div class="prefixBox" id="prefixRow" style="display:none;">
+          <span class="label">Prefix:</span>
+          <button class="chip" id="prefixChip"></button>
+        </div>
+        <div class="suffixBox" id="suffixRow" style="display:none;">
+          <span class="label">Suffix:</span>
+          <button class="chip" id="suffixChip"></button>
+        </div>
+      </div>
+
+      <!-- Single-syllable build area -->
+      <div class="tilesWrap" id="monoWrap" style="display:none;">
+        <div class="tray"     id="tileTray"  aria-label="Tile tray"></div>
+        <div class="dropZone" id="dropZone"  aria-label="Build area">
+          <span class="hint">Drag tiles here (left→right)</span>
+        </div>
+      </div>
+
+      <!-- Multisyllabic build area -->
+      <div id="syllWrap" style="display:none;">
+        <div class="tray"      id="syllTray" aria-label="Tile tray"></div>
+        <div class="syllGrid"  id="syllGrid"></div>
+      </div>
+
+      <div class="row" style="margin-top:8px;">
+        <button id="tileSubmit" type="button" class="primary">Submit</button>
+        <button id="tileClear"  type="button" class="secondary">Clear</button>
+      </div>
+    </div>
+
+    <!-- Spelling input (dictation mode) -->
+    <div id="spellBox" class="row" style="display:none;gap:8px;">
+      <input id="spellInput" placeholder="type the word" class="input"/>
+      <button id="spellBtn" type="button" class="primary">Submit</button>
+    </div>
+
+    <!-- Multiple-choice options -->
+    <div id="options" class="options"></div>
+
+    <!-- Result banner -->
+    <div id="banner" class="banner" style="display:none;"></div>
+
+    <!-- End-of-round actions -->
+    <div class="row" style="margin-top:10px;">
+      <button id="wrapBtn"  type="button" class="secondary">Wrap-up</button>
+      <button id="resetBtn" type="button" class="secondary">Reset</button>
+    </div>
+
+  </section>
+
+  <!-- ── WRAP-UP ── -->
+  <section id="wrap" class="card" style="display:none;">
+    <h2>Wrap-up</h2>
+    <div id="wrapStats">—</div>
+    <div id="wrapTable" class="wraptable"></div>
+    <div class="row">
+      <button id="backBtn" type="button" class="primary">Back to Game</button>
+    </div>
+  </section>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/game.js"></script>
+  <script src="js/ui.js"></script>
+</body>
+</html>
