@@ -8,7 +8,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css"/>
   <style>
-    body { font-family: 'Rajdhani', sans-serif; }
+    body { font-family: 'Rajdhani', sans-serif; max-width: none; margin: 0; padding: 0; }
+    .main { max-width: 1600px; margin: 0 auto; padding: 16px 24px; }
+    header { max-width: none; }
     header {
       background: linear-gradient(135deg, #0a1525 0%, #111e33 100%);
       border-bottom: 2px solid var(--border);
@@ -23,7 +25,7 @@
     .mode-badge { background: #1a3a6a; border: 1px solid #2e5a9a; border-radius: 999px; padding: 4px 14px; font-size: 12px; font-weight: 700; color: var(--info, #4a9eff); letter-spacing: .08em; text-transform: uppercase; }
     .room-display { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 13px; color: var(--muted); }
     .room-display strong { color: var(--accent); font-size: 15px; letter-spacing: .1em; }
-    .main { padding: 16px 20px; }
+    /* .main handled above */
     .setup-panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; margin-bottom: 16px; }
     .setup-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 14px; }
     .field { display: flex; flex-direction: column; gap: 4px; }
