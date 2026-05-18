@@ -169,13 +169,34 @@
     <div class="panel locked" id="panel1">
       <div class="panel-header"><div class="panel-num">1</div><div class="panel-title">Sound Quick Drill</div></div>
       <div class="panel-body">
-        <div style="font-size:11px;color:var(--muted);">Cumulative graphemes up to selected substep</div>
-        <div class="big-display" id="soundDisplay">—</div>
-        <button class="secondary" id="randomSoundBtn" type="button">🎲 Random Sound</button>
+        <!-- Stack selector -->
+        <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;">Stack</div>
+        <div class="step-checks" id="drillStackChecks" style="max-height:70px;overflow-y:auto;"></div>
+        <div class="row" style="gap:5px;margin-bottom:2px;">
+          <button class="secondary small" id="drillStackAll" type="button">All</button>
+          <button class="secondary small" id="drillStackCurrent" type="button">Current only</button>
+          <span id="drillStackCount" style="font-size:11px;color:var(--muted);"></span>
+        </div>
+        <!-- Flashcard -->
+        <div id="soundCard" style="background:#0a1628;border:2px solid var(--border);border-radius:12px;padding:12px;text-align:center;cursor:pointer;min-height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;transition:border-color .2s;" onclick="flipSoundCard()">
+          <div class="big-display" id="soundGrapheme" style="background:transparent;border:none;padding:0;min-height:unset;font-size:40px;">—</div>
+          <div id="soundReveal" style="display:none;width:100%;">
+            <div style="height:1px;background:var(--border);margin:6px 0;"></div>
+            <div id="soundSoundsDisplay" style="font-size:13px;line-height:1.8;"></div>
+          </div>
+          <div id="soundCardHint" style="font-size:10px;color:var(--muted);">tap to reveal</div>
+        </div>
+        <!-- Controls -->
+        <div class="row" style="justify-content:center;gap:6px;">
+          <button class="secondary small" id="drillPrevBtn" type="button">◀</button>
+          <button class="secondary" id="randomSoundBtn" type="button">🎲 Random</button>
+          <button class="secondary small" id="drillNextBtn" type="button">▶</button>
+        </div>
         <div class="row" style="justify-content:space-between;">
           <button class="primary" style="flex:1;" id="drillCorrectBtn" type="button">✓ Correct</button>
           <button class="secondary" style="flex:1;border-color:#e05555;color:#e05555;" id="drillWrongBtn" type="button">✗ Incorrect</button>
         </div>
+        <div style="font-size:11px;color:var(--muted);text-align:center;" id="drillProgress">Card 0 of 0 · Missed: 0</div>
         <div class="log-area" id="drillLog"></div>
       </div>
     </div>
@@ -363,6 +384,9 @@ document.getElementById('createBtn').addEventListener('click', async () => {
   document.getElementById('sessionTag').textContent = `${student} / Step ${step}`;
   document.getElementById('sessionTag').className = 'tag-active';
   addLog('system',`Lesson: Step ${step} | ${S.words.length} words | ${S.hfWords.length} HFW | ${S.graphemes.length} tiles`,'drillLog');
+  // Build sound drill stack
+  populateDrillStack();
+  buildDrillStack();
 });
 
 function updateScoreBar(){
@@ -386,25 +410,153 @@ document.getElementById('awardCoinsBtn').addEventListener('click',()=>{
   if(n>0)awardCoins(n,'manual');
 });
 
-// Panel 1: Sound Quick Drill
+// ── Panel 1: Sound Quick Drill ────────────────────────────
+const DRILL = {
+  stack: [],      // current deck of SOUND_CARDS
+  idx: 0,
+  missed: [],
+  revealed: false,
+};
+
+function buildDrillStack() {
+  if (typeof SOUND_CARDS === 'undefined') return;
+  const checkedSteps = Array.from(document.querySelectorAll('#drillStackChecks .step-check.checked')).map(el=>el.dataset.step);
+  DRILL.stack = shuffle([...SOUND_CARDS.filter(c => checkedSteps.includes(c.step))]);
+  DRILL.idx = 0;
+  DRILL.missed = [];
+  DRILL.revealed = false;
+  showDrillCard();
+}
+
+function populateDrillStack() {
+  const wrap = document.getElementById('drillStackChecks');
+  wrap.innerHTML = '';
+  if (typeof SOUND_CARDS === 'undefined') return;
+  // Get unique steps from SOUND_CARDS that are <= current lesson step
+  const allSteps = Object.keys(BUILTIN.graphemesByStep).sort((a,b)=>parseFloat(a)-parseFloat(b));
+  const lessonIdx = allSteps.indexOf(S.step);
+  const available = [...new Set(SOUND_CARDS.map(c=>c.step))]
+    .filter(s => allSteps.indexOf(s) <= lessonIdx)
+    .sort((a,b)=>parseFloat(a)-parseFloat(b));
+
+  available.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'step-check checked'; div.dataset.step = s;
+    div.innerHTML = `<span>${s}</span>`;
+    div.addEventListener('click', () => { div.classList.toggle('checked'); updateDrillCount(); });
+    wrap.appendChild(div);
+  });
+  updateDrillCount();
+}
+
+function updateDrillCount() {
+  const n = document.querySelectorAll('#drillStackChecks .step-check.checked').length;
+  const total = typeof SOUND_CARDS !== 'undefined' ?
+    SOUND_CARDS.filter(c => Array.from(document.querySelectorAll('#drillStackChecks .step-check.checked')).map(el=>el.dataset.step).includes(c.step)).length : 0;
+  document.getElementById('drillStackCount').textContent = `${total} cards`;
+}
+
+document.getElementById('drillStackAll').addEventListener('click',()=>{
+  document.querySelectorAll('#drillStackChecks .step-check').forEach(el=>el.classList.add('checked'));
+  updateDrillCount();
+});
+document.getElementById('drillStackCurrent').addEventListener('click',()=>{
+  document.querySelectorAll('#drillStackChecks .step-check').forEach(el=>{
+    if(el.dataset.step===S.step) el.classList.add('checked');
+    else el.classList.remove('checked');
+  });
+  updateDrillCount();
+});
+
+function showDrillCard() {
+  const card = DRILL.stack[DRILL.idx];
+  const graphemeEl = document.getElementById('soundGrapheme');
+  const revealEl   = document.getElementById('soundReveal');
+  const hintEl     = document.getElementById('soundCardHint');
+  const progEl     = document.getElementById('drillProgress');
+  const cardEl     = document.getElementById('soundCard');
+
+  if (!card) {
+    graphemeEl.textContent = DRILL.stack.length ? '✓ Done!' : '—';
+    revealEl.style.display = 'none';
+    hintEl.textContent = '';
+    progEl.textContent = `Deck complete · Missed: ${DRILL.missed.length}`;
+    return;
+  }
+
+  graphemeEl.textContent = card.grapheme;
+  revealEl.style.display = 'none';
+  hintEl.textContent = 'tap to reveal';
+  cardEl.style.borderColor = 'var(--border)';
+  DRILL.revealed = false;
+
+  progEl.textContent = `Card ${DRILL.idx+1} of ${DRILL.stack.length} · Missed: ${DRILL.missed.length}`;
+  speak(card.grapheme);
+}
+
+function flipSoundCard() {
+  if (DRILL.revealed) return;
+  const card = DRILL.stack[DRILL.idx];
+  if (!card) return;
+  DRILL.revealed = true;
+
+  // Filter sounds to only show ones introduced at or before current step
+  const allSteps = Object.keys(BUILTIN.graphemesByStep).sort((a,b)=>parseFloat(a)-parseFloat(b));
+  const lessonIdx = allSteps.indexOf(S.step);
+  const visibleSounds = card.sounds.filter(s => {
+    const sIdx = allSteps.indexOf(s.sub || card.step);
+    return sIdx <= lessonIdx;
+  });
+
+  const soundsHtml = visibleSounds.map(s => {
+    const note = s.note ? `<span style="color:var(--muted);font-size:11px;"> (${s.note})</span>` : '';
+    return `<div style="color:var(--accent);font-weight:700;">${s.p} <span style="color:var(--text);font-weight:500;">— ${s.k}</span>${note}</div>`;
+  }).join('');
+
+  document.getElementById('soundSoundsDisplay').innerHTML = soundsHtml;
+  document.getElementById('soundReveal').style.display = '';
+  document.getElementById('soundCardHint').textContent = '';
+  document.getElementById('soundCard').style.borderColor = 'var(--info,#4a9eff)';
+
+  // Speak all sounds
+  if (visibleSounds.length) speak(visibleSounds[0].k);
+}
+
+window.flipSoundCard = flipSoundCard;
+
 document.getElementById('randomSoundBtn').addEventListener('click',()=>{
-  if(!S.graphemes.length)return;
-  const g=S.graphemes[Math.floor(Math.random()*S.graphemes.length)];
-  document.getElementById('soundDisplay').textContent=g;
-  speak(g);
+  buildDrillStack();
+  showDrillCard();
 });
+
+document.getElementById('drillPrevBtn').addEventListener('click',()=>{
+  DRILL.idx = Math.max(0, DRILL.idx-1);
+  showDrillCard();
+});
+
+document.getElementById('drillNextBtn').addEventListener('click',()=>{
+  DRILL.idx = Math.min(DRILL.stack.length-1, DRILL.idx+1);
+  showDrillCard();
+});
+
 document.getElementById('drillCorrectBtn').addEventListener('click',()=>{
-  const g=document.getElementById('soundDisplay').textContent;
-  if(g==='—')return;
+  const card = DRILL.stack[DRILL.idx];
+  if(!card) return;
   S.correct++; awardCoins(5,'sound drill');
-  addLog('correct',`Sound "${g}" ✓`,'drillLog');
-  updateScoreBar(); phaseQuickDrillLog(S.roomId,g,true);
+  addLog('correct',`Sound "${card.grapheme}" ✓`,'drillLog');
+  updateScoreBar(); phaseQuickDrillLog(S.roomId, card.grapheme, true);
+  DRILL.idx++;
+  showDrillCard();
 });
+
 document.getElementById('drillWrongBtn').addEventListener('click',()=>{
-  const g=document.getElementById('soundDisplay').textContent;
-  if(g==='—')return;
-  addLog('wrong',`Sound "${g}" ✗`,'drillLog');
-  phaseQuickDrillLog(S.roomId,g,false);
+  const card = DRILL.stack[DRILL.idx];
+  if(!card) return;
+  DRILL.missed.push(card);
+  addLog('wrong',`Sound "${card.grapheme}" ✗`,'drillLog');
+  phaseQuickDrillLog(S.roomId, card.grapheme, false);
+  DRILL.idx++;
+  showDrillCard();
 });
 
 // Panel 2: Word Reading
