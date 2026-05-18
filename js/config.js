@@ -20,20 +20,78 @@ const LCONFIG = {
 
 const BUILTIN = {
   graphemesByStep: {
+    // Step 1
     '1.1': ['a','e','i','o','u','f','d','g','l','t','b','m','p','n','s'],
     '1.2': ['a','e','i','o','u','c','h','j','k','r','v','w','x','y','z'],
     '1.3': ['a','e','i','o','u','sh','th','wh','ch','ck','qu'],
     '1.4': ['a','e','i','o','u','ff','ll','ss','zz','all','am','an'],
     '1.5': ['a','e','i','o','u','ang','ank','ing','ink','ong','onk','ung','unk'],
     '1.6': ['a','e','i','o','u','bl','br','cl','cr','dr','fl','fr','gl','gr','pl','pr','sk','sl','sm','sn','sp','st','sw','tr','tw'],
+    // Step 2
     '2.1': ['a','e','i','o','u','ang','ank','ing','ink','ong','onk','ung','unk','sh','th','ch','ck','wh'],
     '2.2': ['a','e','i','o','u','ar','or'],
     '2.3': ['a','e','i','o','u','er','ir','ur'],
     '2.4': ['a','e','i','o','u','ai','ay','ee','ea','oa','ow','oe'],
     '2.5': ['a','e','i','o','u','oi','oy','ou','ow','oo'],
+    // Step 3
     '3.1': ['ed','ing','s','es','er','est','ly','y','en','le'],
     '3.2': ['re','un','dis','pre','mis','non'],
     '3.3': ['tion','sion','ture','tive','ness','ment','ful','less','ous'],
+    '3.4': ['ex','de','com','con','pro','ab','ad','sub','per','trans'],
+    '3.5': ['ible','able','al','ial','ic','ics','ive','ize','ise','ify'],
+    // Step 4
+    '4.1': ['ce','ci','cy','ge','gi','gy'],
+    '4.2': ['dge','tch','ph'],
+    '4.3': ['wr','kn','gn','mb','mn'],
+    '4.4': ['tion','sion','cian','cion'],
+    // Step 5
+    '5.1': ['re','un','dis','pre','mis','non','ex','de','com','con','pro'],
+    '5.2': ['ness','ment','ful','less','ous','tion','sion','ture','tive','ly'],
+    '5.3': ['bi','tri','mid','over','under','out','up','semi'],
+    '5.4': ['ary','ery','ory','ant','ent','ance','ence'],
+    '5.5': ['inter','intra','super','fore','post','anti','auto'],
+    // Step 6
+    '6.1': ['duct','port','ject','tract','rupt','scrib','script','dict','aud','vis'],
+    // Step 7
+    '7.1': ['ce','ci','cy','ge','gi','gy'],
+    '7.2': ['dge','nce','nge','lge','rge'],
+    '7.3': ['ph','tch','photo'],
+    '7.4': ['tion','sion','ion'],
+    '7.5': ["n't","'ll","'re","'ve","'s","'d","'m"],
+    // Step 8
+    '8.1': ['ar','er','ir','or','ur','port'],
+    '8.2': ['ar','or','port','form','fort'],
+    '8.3': ['er','ir','ur','therm','inter'],
+    '8.4': ['rr','para'],
+    '8.5': ['ward','ar','or','ard'],
+    // Step 9
+    '9.1': ['ai','ay'],
+    '9.2': ['ee','ey'],
+    '9.3': ['oa','oe','ue'],
+    '9.4': ['oi','oy','au','aw'],
+    '9.5': ['ou','ow','oo'],
+    '9.6': ['ea'],
+    '9.7': ['eu','ew','ui'],
+    // Step 10
+    '10.1': ['ace','age','ate','ice','ile','ine','ite'],
+    '10.2': ['ing','ly','able','ment','ness','ed'],
+    '10.3': ['ed','ing','er','est'],
+    '10.4': ['ed','ing','er'],
+    '10.5': ['ary','ery','ory','ic','ism','ist','ity','ize','ant','ance','ancy','ent','ence','ency','able','ably','ible','ibly'],
+    '10.6': ['ory','ible','ent','ant','ive'],
+    // Step 11
+    '11.1': ['y','hydro','hyper','hypo'],
+    '11.2': ['y','ies','ied','ily','iness'],
+    '11.3': ['igh','eigh'],
+    '11.4': ['ie','ei'],
+    '11.5': ['bio','mania','phobia'],
+    // Step 12
+    '12.1': ['geo','ea','eo','ia','io','ua','uo'],
+    '12.2': ['gh','gn','kn','mb','mn','rh','wr','sign'],
+    '12.3': ['wa','wo','wor','war'],
+    '12.4': ['ch','que','chron','psych'],
+    '12.5': ['al','an','ous','ure','tion','ture','ial','ual'],
+    '12.6': ['ac','af','ag','al','an','ap','ar','as','at','ob','oc','of','op','com','col','cor','il','im','ir','sub','suc','suf','sup','sus'],
   },
 
   wordBank: [
