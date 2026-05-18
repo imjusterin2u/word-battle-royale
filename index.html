@@ -3,229 +3,627 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Word Battle Royale — Lesson Mode</title>
+  <title>Word Battle Royale — Teacher Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    body { font-family: 'Rajdhani', sans-serif; }
+    header {
+      background: linear-gradient(135deg, #0a1525 0%, #111e33 100%);
+      border-bottom: 2px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 10px; }
+    .logo span { color: var(--muted); font-size: 13px; font-family: 'Rajdhani', sans-serif; font-weight: 500; }
+    .mode-badge { background: #1a3a6a; border: 1px solid #2e5a9a; border-radius: 999px; padding: 4px 14px; font-size: 12px; font-weight: 700; color: var(--info, #4a9eff); letter-spacing: .08em; text-transform: uppercase; }
+    .room-display { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; font-size: 13px; color: var(--muted); }
+    .room-display strong { color: var(--accent); font-size: 15px; letter-spacing: .1em; }
+    .main { padding: 16px 20px; }
+    .setup-panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 20px; margin-bottom: 16px; }
+    .setup-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 14px; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+    .review-steps-wrap { background: #0a1628; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; max-height: 110px; overflow-y: auto; }
+    .review-steps-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 11px; color: var(--muted); }
+    .step-checks { display: flex; flex-wrap: wrap; gap: 4px; }
+    .step-check { display: flex; align-items: center; gap: 3px; background: var(--pill); border: 1px solid var(--border); border-radius: 6px; padding: 3px 7px; cursor: pointer; transition: all .1s; }
+    .step-check:hover { border-color: var(--accent); }
+    .step-check.checked { background: #0d2a1a; border-color: var(--success); }
+    .step-check span { font-size: 12px; font-weight: 600; }
+    .step-check.checked span { color: var(--success); }
+    .setup-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--border); }
+    .score-bar { display: flex; gap: 8px; padding: 10px 14px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
+    .score-item { display: flex; align-items: center; gap: 6px; }
+    .score-label { font-size: 10px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
+    .score-val { font-weight: 700; font-size: 16px; }
+    .score-divider { width: 1px; height: 24px; background: var(--border); margin: 0 4px; }
+    .panels { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+    @media(max-width:1300px){.panels{grid-template-columns:repeat(3,1fr);}}
+    @media(max-width:800px){.panels{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:500px){.panels{grid-template-columns:1fr;}}
+    .panel { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px; min-height: 300px; }
+    .panel.locked { opacity: .4; pointer-events: none; }
+    .panel-header { display: flex; align-items: center; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .panel-num { background: var(--accent); color: #06101f; font-weight: 800; font-size: 12px; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .panel-title { font-family: 'Cinzel', serif; font-size: 11px; font-weight: 600; color: var(--accent); letter-spacing: .04em; line-height: 1.3; }
+    .panel-body { flex: 1; display: flex; flex-direction: column; gap: 7px; }
+    .big-display { background: #0a1628; border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; font-family: 'Cinzel', serif; font-size: 32px; font-weight: 800; color: var(--accent); min-height: 72px; display: flex; align-items: center; justify-content: center; letter-spacing: .08em; }
+    .word-display { font-size: 24px; font-family: 'Rajdhani', sans-serif; color: var(--text); }
+    .hfw-display { color: #4a9eff; }
+    .enc-display { color: var(--accent2, #e07830); font-size: 22px; }
+    .hfw-nav { display: flex; gap: 5px; justify-content: center; align-items: center; flex-wrap: wrap; }
+    .hfw-counter { font-size: 12px; color: var(--muted); font-weight: 600; min-width: 50px; text-align: center; }
+    .mode-toggle { display: flex; gap: 5px; }
+    .mode-btn { flex: 1; padding: 5px; font-size: 11px; font-family: 'Rajdhani', sans-serif; font-weight: 700; border-radius: 7px; border: 1px solid var(--border); background: #0a1628; color: var(--muted); cursor: pointer; transition: all .15s; text-align: center; }
+    .mode-btn.active { background: #1a3050; border-color: #4a9eff; color: #4a9eff; }
+    .dict-result { border-radius: 8px; padding: 7px 10px; font-size: 13px; font-weight: 700; text-align: center; display: none; }
+    .dict-result.correct { background: #0d3020; color: var(--success); border: 1px solid var(--success); }
+    .dict-result.wrong   { background: #2a0f0f; color: var(--danger);  border: 1px solid var(--danger); }
+    .log-area { background: #070e1a; border: 1px solid var(--border); border-radius: 7px; padding: 6px 8px; font-size: 11px; color: var(--muted); max-height: 70px; overflow-y: auto; font-family: monospace; }
+    .log-entry { padding: 1px 0; }
+    .log-entry.correct { color: var(--success); }
+    .log-entry.wrong   { color: var(--danger); }
+    .coin-flash { position: fixed; top: 66px; right: 20px; background: #2a1f00; border: 2px solid var(--accent); border-radius: 10px; padding: 8px 16px; font-family: 'Cinzel', serif; font-size: 14px; font-weight: 700; color: var(--accent); z-index: 999; opacity: 0; transform: translateY(-8px); transition: all .3s; pointer-events: none; }
+    .coin-flash.show { opacity: 1; transform: translateY(0); }
+    .tag-active { background: #0d2a1a; border: 1px solid var(--success); border-radius: 999px; padding: 3px 10px; font-size: 11px; font-weight: 700; color: var(--success); }
+    .tag-idle { background: var(--pill); border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; font-size: 11px; font-weight: 700; color: var(--muted); }
+    #summaryModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:200; align-items:center; justify-content:center; }
+    #summaryModal.open { display:flex; }
+    .modal-box { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:24px; max-width:620px; width:90%; max-height:80vh; overflow-y:auto; }
+    ::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:var(--surface,#0e1d35);}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+  </style>
 </head>
 <body>
 
-  <!-- ── MENU ── -->
-  <section id="menu" class="card">
-    <h1>⚔️ Word Battle Royale</h1>
-    <p class="subtitle">Wilson Reading System — Lesson Mode</p>
+<header>
+  <div class="logo">⚔️ Word Battle Royale <span>Teacher Console</span></div>
+  <div class="row" style="gap:10px;">
+    <div class="mode-badge">Lesson Mode</div>
+    <div class="room-display">Room: <strong id="roomCode">——</strong></div>
+    <button class="secondary small" id="summaryBtn" type="button">📋 Summary</button>
+  </div>
+</header>
 
-    <div class="row-inline">
-      <label class="label">Your name</label>
-      <input id="name" placeholder="Teacher / student name" class="input"/>
-    </div>
+<div class="coin-flash" id="coinFlash">+🪙</div>
 
-    <div class="row-inline">
-      <label class="label">Step</label>
-      <select id="step" class="input">
-        <option value="1.1">Step 1.1</option>
-        <option value="1.2">Step 1.2</option>
-        <option value="1.3">Step 1.3</option>
-        <option value="1.4">Step 1.4</option>
-        <option value="1.5">Step 1.5</option>
-        <option value="1.6">Step 1.6</option>
-        <option value="2.1" selected>Step 2.1</option>
-        <option value="2.2">Step 2.2</option>
-        <option value="2.3">Step 2.3</option>
-        <option value="2.4">Step 2.4</option>
-        <option value="2.5">Step 2.5</option>
-        <option value="3.1">Step 3.1</option>
-        <option value="3.2">Step 3.2</option>
-        <option value="3.3">Step 3.3</option>
-        <option value="3.4">Step 3.4</option>
-        <option value="3.5">Step 3.5</option>
-        <option value="4.1">Step 4.1</option>
-        <option value="4.2">Step 4.2</option>
-        <option value="4.3">Step 4.3</option>
-        <option value="4.4">Step 4.4</option>
-        <option value="5.1">Step 5.1</option>
-        <option value="5.2">Step 5.2</option>
-        <option value="5.3">Step 5.3</option>
-        <option value="5.4">Step 5.4</option>
-        <option value="5.5">Step 5.5</option>
-        <option value="6.1">Step 6.1</option>
-        <option value="7.1">Step 7.1</option>
-        <option value="7.2">Step 7.2</option>
-        <option value="7.3">Step 7.3</option>
-        <option value="7.4">Step 7.4</option>
-        <option value="7.5">Step 7.5</option>
-        <option value="8.1">Step 8.1</option>
-        <option value="8.2">Step 8.2</option>
-        <option value="8.3">Step 8.3</option>
-        <option value="8.4">Step 8.4</option>
-        <option value="8.5">Step 8.5</option>
-        <option value="9.1">Step 9.1</option>
-        <option value="9.2">Step 9.2</option>
-        <option value="9.3">Step 9.3</option>
-        <option value="9.4">Step 9.4</option>
-        <option value="9.5">Step 9.5</option>
-        <option value="9.6">Step 9.6</option>
-        <option value="9.7">Step 9.7</option>
-        <option value="10.1">Step 10.1</option>
-        <option value="10.2">Step 10.2</option>
-        <option value="10.3">Step 10.3</option>
-        <option value="10.4">Step 10.4</option>
-        <option value="10.5">Step 10.5</option>
-        <option value="10.6">Step 10.6</option>
-        <option value="11.1">Step 11.1</option>
-        <option value="11.2">Step 11.2</option>
-        <option value="11.3">Step 11.3</option>
-        <option value="11.4">Step 11.4</option>
-        <option value="11.5">Step 11.5</option>
-        <option value="12.1">Step 12.1</option>
-        <option value="12.2">Step 12.2</option>
-        <option value="12.3">Step 12.3</option>
-        <option value="12.4">Step 12.4</option>
-        <option value="12.5">Step 12.5</option>
-        <option value="12.6">Step 12.6</option>
-      </select>
-    </div>
+<div class="main">
 
-    <div class="row-inline">
-      <label class="label">Custom tiles (optional, comma-separated)</label>
-      <input id="customTiles" placeholder="e.g. bl, cr, str" class="input"/>
-    </div>
-
-    <!-- Word list display -->
-    <div class="wordlist-wrapper">
-      <div class="wordlist-header">
-        <span class="label">Word bank for selected step</span>
-        <span id="wordCount" class="badge">—</span>
+  <!-- Setup -->
+  <div class="setup-panel">
+    <div class="setup-grid">
+      <div class="field"><label>Teacher</label><input id="teacherName" placeholder="Your name"/></div>
+      <div class="field"><label>Student</label><input id="studentName" placeholder="Student name"/></div>
+      <div class="field">
+        <label>Lesson Substep</label>
+        <select id="substep"><option value="">— select —</option></select>
       </div>
-      <div class="wordlist-box" id="wordlistBox"></div>
+      <div class="field"><label>Syllable Trays</label><input id="syllTrays" type="number" value="2" min="1" max="6"/></div>
+      <div class="field">
+        <label>Faction / Theme</label>
+        <select id="faction">
+          <option value="medieval">⚔️ Medieval</option>
+          <option value="space">🚀 Space</option>
+          <option value="fantasy">🐉 Fantasy</option>
+        </select>
+      </div>
+      <div class="field"><label>Custom Tiles (CSV)</label><input id="customTiles" placeholder="sh, th, tch, …"/></div>
     </div>
 
-    <div class="row-inline" style="margin-top:14px;">
-      <button id="startBtn" class="primary" type="button">Start Lesson</button>
-      <button id="battleBtn" class="secondary" type="button">⚔️ Battle Mode</button>
-    </div>
-  </section>
-
-  <!-- ── GAME ── -->
-  <section id="game" class="card" style="display:none;">
-
-    <!-- HUD -->
-    <div class="hud">
-      <div>Room: <span id="rid">—</span></div>
-      <div>Round: <span id="rnd">1</span> / <span id="roundTotal">10</span></div>
-      <div class="status" id="gstatus">waiting</div>
-    </div>
-
-    <!-- Scoreboard -->
-    <div class="scoreboard">
-      <div class="team">
-        <div class="name">You</div>
-        <div class="stats">
-          <span id="p1Pts">Pts: 0</span> ·
-          <span id="p1Coins">Coins: 100</span> ·
-          <span id="p1Army">Army: 10</span>
+    <div class="field" style="margin-bottom:12px;">
+      <label>Review Steps <span style="font-size:10px;color:var(--muted);text-transform:none;font-weight:400;">(all prior substeps — check to include)</span></label>
+      <div class="review-steps-wrap">
+        <div class="review-steps-header">
+          <span id="reviewCount">0 selected</span>
+          <div class="row" style="gap:6px;">
+            <button class="secondary small" type="button" id="selectAllReview">All</button>
+            <button class="secondary small" type="button" id="clearReview">None</button>
+          </div>
         </div>
+        <div class="step-checks" id="reviewChecks"></div>
       </div>
-      <div class="team">
-        <div class="name" id="p2Name">Opponent</div>
-        <div class="stats">
-          <span id="p2Pts">Pts: 0</span> ·
-          <span id="p2Coins">Coins: 100</span> ·
-          <span id="p2Army">Army: 10</span>
+    </div>
+
+    <div class="field" style="margin-bottom:12px;">
+      <label>Bulk Import HFW</label>
+      <div class="row">
+        <input type="file" id="hfwFile" accept=".csv" style="flex:1;font-size:12px;padding:5px;background:#0a1628;border:1px solid var(--border);border-radius:7px;color:var(--text);"/>
+        <button class="secondary small" type="button" id="hfwImportBtn">Import</button>
+      </div>
+    </div>
+
+    <div class="setup-actions">
+      <button class="primary" id="createBtn" type="button">⚔️ Create / Refresh Lesson</button>
+      <button class="secondary" id="saveProfileBtn" type="button">💾 Save Profile</button>
+      <button class="secondary" id="loadProfileBtn" type="button">📂 Load Profile</button>
+      <div style="flex:1;"></div>
+      <span class="tag-idle" id="sessionTag">No session</span>
+    </div>
+  </div>
+
+  <!-- Score bar -->
+  <div class="score-bar">
+    <div class="score-item"><span class="score-label">Student</span><span class="score-val" id="sbStudent">—</span></div>
+    <div class="score-divider"></div>
+    <div class="score-item"><span class="score-label">Coins 🪙</span><span class="score-val" style="color:var(--accent);" id="sbCoins">0</span></div>
+    <div class="score-divider"></div>
+    <div class="score-item"><span class="score-label">Army 🪖</span><span class="score-val" style="color:var(--success);" id="sbArmy">10</span></div>
+    <div class="score-divider"></div>
+    <div class="score-item"><span class="score-label">Correct ✓</span><span class="score-val" style="color:#4a9eff;" id="sbCorrect">0</span></div>
+    <div class="score-divider"></div>
+    <div class="score-item"><span class="score-label">Step</span><span class="score-val" id="sbStep">—</span></div>
+    <div style="flex:1;"></div>
+    <button class="primary small" id="awardCoinsBtn" type="button">+ Award Coins</button>
+  </div>
+
+  <!-- 5 panels -->
+  <div class="panels">
+
+    <!-- 1: Sound Quick Drill -->
+    <div class="panel locked" id="panel1">
+      <div class="panel-header"><div class="panel-num">1</div><div class="panel-title">Sound Quick Drill</div></div>
+      <div class="panel-body">
+        <div style="font-size:11px;color:var(--muted);">Cumulative graphemes up to selected substep</div>
+        <div class="big-display" id="soundDisplay">—</div>
+        <button class="secondary" id="randomSoundBtn" type="button">🎲 Random Sound</button>
+        <div class="row" style="justify-content:space-between;">
+          <button class="primary" style="flex:1;" id="drillCorrectBtn" type="button">✓ Correct</button>
+          <button class="secondary" style="flex:1;border-color:#e05555;color:#e05555;" id="drillWrongBtn" type="button">✗ Incorrect</button>
         </div>
+        <div class="log-area" id="drillLog"></div>
       </div>
     </div>
 
-    <!-- Shop -->
-    <div class="shop row" style="gap:12px;align-items:flex-start;flex-wrap:wrap;">
-      <div><strong>Shop:</strong></div>
-      <button class="secondary small" id="buySoldier" type="button">Buy Soldier (20c, +1 army)</button>
-      <button class="secondary small" id="buyKnight"  type="button">Buy Knight (50c, +3 army)</button>
-      <button class="primary small"   id="attackBtn"  type="button">💥 Surprise Attack (40c)</button>
-      <span id="shopMsg"></span>
-      <span id="attackMsg"></span>
-    </div>
-
-    <!-- Battle status -->
-    <div id="battleBox" class="card dark" style="display:none;">
-      <div><strong>🏆 SPEED BATTLE:</strong> First correct within <span id="battleSeconds">20</span>s steals coins &amp; soldiers!</div>
-      <div id="battleTimer" style="margin-top:4px;opacity:.8;">Time left: <span id="btLeft">—</span>s</div>
-    </div>
-
-    <!-- Attack status -->
-    <div id="attackBox" class="card dark" style="display:none;">
-      <div><strong>💥 Surprise Attack!</strong> You are the defender — answer fast.</div>
-      <div id="attackTimer" style="margin-top:4px;opacity:.8;">Time left: <span id="atLeft">—</span>s</div>
-    </div>
-
-    <!-- Prompt -->
-    <h3 id="prompt">—</h3>
-
-    <!-- Tile UI (word construction) -->
-    <div id="tileUI" style="display:none;">
-      <div class="prefixSuffixRow" id="affixRow" style="display:flex;gap:10px;align-items:center;margin-bottom:6px;">
-        <div class="prefixBox" id="prefixRow" style="display:none;">
-          <span class="label">Prefix:</span>
-          <button class="chip" id="prefixChip"></button>
+    <!-- 2: Word Reading Review -->
+    <div class="panel locked" id="panel2">
+      <div class="panel-header"><div class="panel-num">2</div><div class="panel-title">Word Reading Review</div></div>
+      <div class="panel-body">
+        <div class="row">
+          <input id="wordReadInput" placeholder="Type or pick word…" style="flex:1;"/>
+          <button class="secondary small" id="randomWordBtn" type="button" title="Random">🎲</button>
         </div>
-        <div class="suffixBox" id="suffixRow" style="display:none;">
-          <span class="label">Suffix:</span>
-          <button class="chip" id="suffixChip"></button>
+        <div class="big-display word-display" id="wordDisplay">—</div>
+        <div class="row">
+          <button class="secondary small" id="speakWordBtn" type="button">🔊 Speak</button>
+          <button class="secondary small" id="listenBtn" type="button">🎤 Listen</button>
+          <button class="secondary small" id="stopListenBtn" type="button" style="display:none;">⏹ Stop</button>
         </div>
-      </div>
-
-      <!-- Single-syllable build area -->
-      <div class="tilesWrap" id="monoWrap" style="display:none;">
-        <div class="tray"     id="tileTray"  aria-label="Tile tray"></div>
-        <div class="dropZone" id="dropZone"  aria-label="Build area">
-          <span class="hint">Drag tiles here (left→right)</span>
+        <div class="row">
+          <button class="primary small" style="flex:1;" id="logReadCorrect" type="button">✓ Correct</button>
+          <button class="secondary small" style="flex:1;border-color:#e05555;color:#e05555;" id="logReadWrong" type="button">✗ Incorrect</button>
         </div>
-      </div>
-
-      <!-- Multisyllabic build area -->
-      <div id="syllWrap" style="display:none;">
-        <div class="tray"      id="syllTray" aria-label="Tile tray"></div>
-        <div class="syllGrid"  id="syllGrid"></div>
-      </div>
-
-      <div class="row" style="margin-top:8px;">
-        <button id="tileSubmit" type="button" class="primary">Submit</button>
-        <button id="tileClear"  type="button" class="secondary">Clear</button>
+        <div class="log-area" id="wordLog"></div>
       </div>
     </div>
 
-    <!-- Spelling input (dictation mode) -->
-    <div id="spellBox" class="row" style="display:none;gap:8px;">
-      <input id="spellInput" placeholder="type the word" class="input"/>
-      <button id="spellBtn" type="button" class="primary">Submit</button>
+    <!-- 3: HF Words -->
+    <div class="panel locked" id="panel3">
+      <div class="panel-header"><div class="panel-num">3</div><div class="panel-title">High-Frequency Words</div></div>
+      <div class="panel-body">
+        <div class="big-display hfw-display" id="hfwDisplay">—</div>
+        <div class="hfw-nav">
+          <button class="secondary small" id="hfwFirst" type="button">⏮</button>
+          <button class="secondary small" id="hfwPrev" type="button">◀</button>
+          <span class="hfw-counter" id="hfwCounter">0 / 0</span>
+          <button class="secondary small" id="hfwNext" type="button">▶</button>
+          <button class="secondary small" id="hfwSpeak" type="button">🔊</button>
+          <button class="secondary small" id="hfwSkip" type="button" style="color:#e05555;">✗</button>
+        </div>
+        <div class="row">
+          <button class="primary small" style="flex:1;" id="hfwCorrect" type="button">✓ Correct</button>
+          <button class="secondary small" style="flex:1;border-color:#e05555;color:#e05555;" id="hfwWrong" type="button">✗ Incorrect</button>
+        </div>
+        <div class="row">
+          <input id="hfwAddInput" placeholder="Add HF word…" style="flex:1;font-size:13px;"/>
+          <button class="secondary small" id="hfwAddBtn" type="button">Add</button>
+        </div>
+        <div class="log-area" id="hfwLog"></div>
+      </div>
     </div>
 
-    <!-- Multiple-choice options -->
-    <div id="options" class="options"></div>
-
-    <!-- Result banner -->
-    <div id="banner" class="banner" style="display:none;"></div>
-
-    <!-- End-of-round actions -->
-    <div class="row" style="margin-top:10px;">
-      <button id="wrapBtn"  type="button" class="secondary">Wrap-up</button>
-      <button id="resetBtn" type="button" class="secondary">Reset</button>
+    <!-- 4: Encoding -->
+    <div class="panel locked" id="panel4">
+      <div class="panel-header"><div class="panel-num">4</div><div class="panel-title">Encoding / Spelling</div></div>
+      <div class="panel-body">
+        <div class="row">
+          <input id="encPromptInput" placeholder="Prompt word…" style="flex:1;"/>
+          <button class="secondary small" id="encRandomBtn" type="button">🎲</button>
+        </div>
+        <div class="big-display enc-display" id="encPromptDisplay">—</div>
+        <button class="secondary small" id="encSpeakBtn" type="button">🔊 Speak Prompt</button>
+        <div class="mode-toggle">
+          <div class="mode-btn active" id="modeTiles" onclick="setEncMode('tiles')">🧩 Tiles Mode</div>
+          <div class="mode-btn" id="modeTyping" onclick="setEncMode('typing')">⌨️ Typing Mode</div>
+        </div>
+        <div class="row">
+          <button class="primary small" style="flex:1;" id="encCorrect" type="button">✓ Correct</button>
+          <button class="secondary small" style="flex:1;border-color:#e05555;color:#e05555;" id="encWrong" type="button">✗ Incorrect</button>
+        </div>
+        <div class="log-area" id="encLog"></div>
+      </div>
     </div>
 
-  </section>
-
-  <!-- ── WRAP-UP ── -->
-  <section id="wrap" class="card" style="display:none;">
-    <h2>Wrap-up</h2>
-    <div id="wrapStats">—</div>
-    <div id="wrapTable" class="wraptable"></div>
-    <div class="row">
-      <button id="backBtn" type="button" class="primary">Back to Game</button>
+    <!-- 5: Dictation -->
+    <div class="panel locked" id="panel5">
+      <div class="panel-header"><div class="panel-num">5</div><div class="panel-title">Dictation (Quick Check)</div></div>
+      <div class="panel-body">
+        <div class="row">
+          <input id="dictPromptInput" placeholder="Prompt word…" style="flex:1;"/>
+          <button class="secondary small" id="dictRandomBtn" type="button">🎲</button>
+        </div>
+        <button class="secondary small" id="dictSpeakBtn" type="button">🔊 Speak</button>
+        <div class="field">
+          <label>Student types here</label>
+          <input id="dictStudentInput" placeholder="Student types here…"/>
+        </div>
+        <button class="primary" id="dictCheckBtn" type="button" style="width:100%;">Check</button>
+        <div class="dict-result" id="dictResult"></div>
+        <div class="log-area" id="dictLog"></div>
+      </div>
     </div>
-  </section>
 
-  <!-- Scripts -->
-  <script src="js/config.js"></script>
-  <script src="js/game.js"></script>
-  <script type="module" src="js/firebase.js"></script>
-  <script src="js/ui.js" defer></script>
+  </div>
+</div>
+
+<!-- Summary modal -->
+<div id="summaryModal">
+  <div class="modal-box">
+    <div class="row" style="justify-content:space-between;margin-bottom:16px;">
+      <h2 style="font-family:'Cinzel',serif;color:var(--accent);">Session Summary</h2>
+      <button class="secondary small" onclick="document.getElementById('summaryModal').classList.remove('open')" type="button">✕ Close</button>
+    </div>
+    <div id="summaryContent">No session data yet.</div>
+    <div style="margin-top:16px;">
+      <button class="primary small" id="exportSummaryBtn" type="button">📥 Export CSV</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/game.js"></script>
+<script type="module" src="js/firebase.js"></script>
+<script>
+const S = {
+  roomId:null, teacher:'', student:'', step:'',
+  reviewSteps:[], words:[], hfWords:[], graphemes:[],
+  encMode:'tiles', hfIdx:0, coins:0, army:10, correct:0,
+  log:[], sessionActive:false,
+};
+
+// Populate substep dropdown
+function populateSubsteps() {
+  const sel = document.getElementById('substep');
+  Object.keys(BUILTIN.graphemesByStep)
+    .sort((a,b)=>parseFloat(a)-parseFloat(b))
+    .forEach(s => {
+      const o = document.createElement('option');
+      o.value = s; o.textContent = `Step ${s}`;
+      sel.appendChild(o);
+    });
+}
+
+// Review step checkboxes
+function populateReviewChecks(currentStep) {
+  const wrap = document.getElementById('reviewChecks');
+  wrap.innerHTML = '';
+  S.reviewSteps = [];
+  if (!currentStep) return;
+  const all = Object.keys(BUILTIN.graphemesByStep).sort((a,b)=>parseFloat(a)-parseFloat(b));
+  const idx = all.indexOf(currentStep);
+  all.slice(0, idx).forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'step-check'; div.dataset.step = s;
+    div.innerHTML = `<span>${s}</span>`;
+    div.addEventListener('click', () => { div.classList.toggle('checked'); updateReviewCount(); });
+    wrap.appendChild(div);
+  });
+  updateReviewCount();
+}
+
+function updateReviewCount() {
+  S.reviewSteps = Array.from(document.querySelectorAll('.step-check.checked')).map(el=>el.dataset.step);
+  document.getElementById('reviewCount').textContent = `${S.reviewSteps.length} selected`;
+}
+
+document.getElementById('selectAllReview').addEventListener('click',()=>{document.querySelectorAll('.step-check').forEach(el=>el.classList.add('checked'));updateReviewCount();});
+document.getElementById('clearReview').addEventListener('click',()=>{document.querySelectorAll('.step-check').forEach(el=>el.classList.remove('checked'));updateReviewCount();});
+document.getElementById('substep').addEventListener('change',function(){populateReviewChecks(this.value);});
+
+// Create lesson
+document.getElementById('createBtn').addEventListener('click', async () => {
+  const teacher = document.getElementById('teacherName').value.trim();
+  const student = document.getElementById('studentName').value.trim();
+  const step    = document.getElementById('substep').value;
+  if (!teacher||!student||!step){alert('Please fill in Teacher, Student, and Substep.');return;}
+  S.teacher=teacher; S.student=student; S.step=step;
+  S.coins=0; S.army=10; S.correct=0; S.log=[];
+
+  const allSteps = [step,...S.reviewSteps];
+  const gSet = new Set();
+  allSteps.forEach(s=>(BUILTIN.graphemesByStep[s]||[]).forEach(g=>gSet.add(g)));
+  const custom = document.getElementById('customTiles').value.split(',').map(s=>s.trim()).filter(Boolean);
+  custom.forEach(g=>gSet.add(g));
+  S.graphemes = Array.from(gSet);
+  S.words = BUILTIN.wordBank.filter(w=>allSteps.includes(w.step)).map(w=>w.word);
+  S.hfWords = BUILTIN.highFrequency.filter(w=>allSteps.includes(w.step)).map(w=>w.word);
+  S.hfIdx = 0;
+
+  S.roomId = await createRoom(teacher,'Lesson',step,custom.join(','));
+  document.getElementById('roomCode').textContent = S.roomId;
+  document.querySelectorAll('.panel.locked').forEach(p=>p.classList.remove('locked'));
+  S.sessionActive = true;
+  updateScoreBar();
+  refreshHFW();
+  document.getElementById('sessionTag').textContent = `${student} / Step ${step}`;
+  document.getElementById('sessionTag').className = 'tag-active';
+  addLog('system',`Lesson: Step ${step} | ${S.words.length} words | ${S.hfWords.length} HFW | ${S.graphemes.length} tiles`,'drillLog');
+});
+
+function updateScoreBar(){
+  document.getElementById('sbStudent').textContent = S.student||'—';
+  document.getElementById('sbCoins').textContent   = S.coins;
+  document.getElementById('sbArmy').textContent    = S.army;
+  document.getElementById('sbCorrect').textContent = S.correct;
+  document.getElementById('sbStep').textContent    = S.step||'—';
+}
+
+function awardCoins(n, reason){
+  S.coins+=n; updateScoreBar();
+  const el=document.getElementById('coinFlash');
+  el.textContent=`+${n} 🪙 ${reason||''}`;
+  el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2000);
+}
+
+document.getElementById('awardCoinsBtn').addEventListener('click',()=>{
+  const n=parseInt(prompt('Award how many coins?','10')||'0');
+  if(n>0)awardCoins(n,'manual');
+});
+
+// Panel 1: Sound Quick Drill
+document.getElementById('randomSoundBtn').addEventListener('click',()=>{
+  if(!S.graphemes.length)return;
+  const g=S.graphemes[Math.floor(Math.random()*S.graphemes.length)];
+  document.getElementById('soundDisplay').textContent=g;
+  speak(g);
+});
+document.getElementById('drillCorrectBtn').addEventListener('click',()=>{
+  const g=document.getElementById('soundDisplay').textContent;
+  if(g==='—')return;
+  S.correct++; awardCoins(5,'sound drill');
+  addLog('correct',`Sound "${g}" ✓`,'drillLog');
+  updateScoreBar(); phaseQuickDrillLog(S.roomId,g,true);
+});
+document.getElementById('drillWrongBtn').addEventListener('click',()=>{
+  const g=document.getElementById('soundDisplay').textContent;
+  if(g==='—')return;
+  addLog('wrong',`Sound "${g}" ✗`,'drillLog');
+  phaseQuickDrillLog(S.roomId,g,false);
+});
+
+// Panel 2: Word Reading
+document.getElementById('wordReadInput').addEventListener('input',function(){document.getElementById('wordDisplay').textContent=this.value||'—';});
+document.getElementById('randomWordBtn').addEventListener('click',()=>{
+  if(!S.words.length)return;
+  const w=S.words[Math.floor(Math.random()*S.words.length)];
+  document.getElementById('wordReadInput').value=w;
+  document.getElementById('wordDisplay').textContent=w;
+});
+document.getElementById('speakWordBtn').addEventListener('click',()=>speak(document.getElementById('wordReadInput').value));
+document.getElementById('logReadCorrect').addEventListener('click',()=>{
+  const w=document.getElementById('wordReadInput').value.trim();
+  if(!w)return; S.correct++; awardCoins(8,'word reading');
+  addLog('correct',`Read "${w}" ✓`,'wordLog'); updateScoreBar(); phaseWordReadingLog(S.roomId,w,w);
+});
+document.getElementById('logReadWrong').addEventListener('click',()=>{
+  const w=document.getElementById('wordReadInput').value.trim();
+  if(!w)return; addLog('wrong',`Read "${w}" ✗`,'wordLog'); phaseWordReadingLog(S.roomId,w,'');
+});
+let recognition=null;
+document.getElementById('listenBtn').addEventListener('click',()=>{
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert('Speech recognition not supported. Try Chrome.');return;}
+  recognition=new SR(); recognition.lang='en-US';
+  recognition.onresult=e=>{
+    const h=e.results[0][0].transcript;
+    document.getElementById('wordReadInput').value=h;
+    document.getElementById('wordDisplay').textContent=h;
+  };
+  recognition.start();
+  document.getElementById('listenBtn').style.display='none';
+  document.getElementById('stopListenBtn').style.display='';
+});
+document.getElementById('stopListenBtn').addEventListener('click',()=>{
+  if(recognition)recognition.stop();
+  document.getElementById('listenBtn').style.display='';
+  document.getElementById('stopListenBtn').style.display='none';
+});
+
+// Panel 3: HF Words
+function refreshHFW(){
+  const total=S.hfWords.length;
+  if(!total){document.getElementById('hfwDisplay').textContent='—';document.getElementById('hfwCounter').textContent='0 / 0';return;}
+  S.hfIdx=Math.max(0,Math.min(S.hfIdx,total-1));
+  document.getElementById('hfwDisplay').textContent=S.hfWords[S.hfIdx];
+  document.getElementById('hfwCounter').textContent=`${S.hfIdx+1} / ${total}`;
+}
+document.getElementById('hfwFirst').addEventListener('click',()=>{S.hfIdx=0;refreshHFW();});
+document.getElementById('hfwPrev').addEventListener('click',()=>{S.hfIdx=Math.max(0,S.hfIdx-1);refreshHFW();});
+document.getElementById('hfwNext').addEventListener('click',()=>{S.hfIdx=Math.min(S.hfWords.length-1,S.hfIdx+1);refreshHFW();});
+document.getElementById('hfwSpeak').addEventListener('click',()=>speak(S.hfWords[S.hfIdx]||''));
+document.getElementById('hfwSkip').addEventListener('click',()=>{S.hfIdx++;refreshHFW();});
+document.getElementById('hfwCorrect').addEventListener('click',()=>{
+  const w=S.hfWords[S.hfIdx]; if(!w)return;
+  S.correct++; awardCoins(8,'HF word');
+  addLog('correct',`HFW "${w}" ✓`,'hfwLog'); updateScoreBar(); phaseHFLog(S.roomId,w,true);
+  S.hfIdx++; refreshHFW();
+});
+document.getElementById('hfwWrong').addEventListener('click',()=>{
+  const w=S.hfWords[S.hfIdx]; if(!w)return;
+  addLog('wrong',`HFW "${w}" ✗`,'hfwLog'); phaseHFLog(S.roomId,w,false);
+  S.hfIdx++; refreshHFW();
+});
+document.getElementById('hfwAddBtn').addEventListener('click',()=>{
+  const w=document.getElementById('hfwAddInput').value.trim(); if(!w)return;
+  S.hfWords.push(w); document.getElementById('hfwAddInput').value='';
+  refreshHFW(); addLog('system',`Added HFW: "${w}"`,'hfwLog');
+});
+document.getElementById('hfwImportBtn').addEventListener('click',()=>{
+  const file=document.getElementById('hfwFile').files[0];
+  if(!file){alert('Select a CSV file first.');return;}
+  const r=new FileReader();
+  r.onload=e=>{
+    const lines=e.target.result.split('\n').slice(1); let added=0;
+    lines.forEach(line=>{
+      const parts=line.split(',');
+      const word=(parts[1]||parts[0]||'').replace(/"/g,'').trim();
+      if(word){S.hfWords.push(word);added++;}
+    });
+    refreshHFW(); addLog('system',`Imported ${added} HF words`,'hfwLog');
+  };
+  r.readAsText(file);
+});
+
+// Panel 4: Encoding
+document.getElementById('encPromptInput').addEventListener('input',function(){document.getElementById('encPromptDisplay').textContent=this.value||'—';});
+document.getElementById('encRandomBtn').addEventListener('click',()=>{
+  if(!S.words.length)return;
+  const w=S.words[Math.floor(Math.random()*S.words.length)];
+  document.getElementById('encPromptInput').value=w;
+  document.getElementById('encPromptDisplay').textContent=w;
+});
+document.getElementById('encSpeakBtn').addEventListener('click',()=>speak(document.getElementById('encPromptInput').value));
+document.getElementById('encCorrect').addEventListener('click',()=>{
+  const w=document.getElementById('encPromptInput').value.trim(); if(!w)return;
+  S.correct++; awardCoins(12,'encoding');
+  addLog('correct',`Encode "${w}" ✓`,'encLog'); updateScoreBar(); phaseEncodingLog(S.roomId,w,w,S.encMode);
+});
+document.getElementById('encWrong').addEventListener('click',()=>{
+  const w=document.getElementById('encPromptInput').value.trim(); if(!w)return;
+  addLog('wrong',`Encode "${w}" ✗`,'encLog'); phaseEncodingLog(S.roomId,w,'',S.encMode);
+});
+function setEncMode(mode){
+  S.encMode=mode;
+  document.getElementById('modeTiles').classList.toggle('active',mode==='tiles');
+  document.getElementById('modeTyping').classList.toggle('active',mode==='typing');
+}
+
+// Panel 5: Dictation
+document.getElementById('dictRandomBtn').addEventListener('click',()=>{
+  if(!S.words.length)return;
+  const w=S.words[Math.floor(Math.random()*S.words.length)];
+  document.getElementById('dictPromptInput').value=w;
+});
+document.getElementById('dictSpeakBtn').addEventListener('click',()=>speak(document.getElementById('dictPromptInput').value));
+document.getElementById('dictCheckBtn').addEventListener('click',()=>{
+  const prompt=document.getElementById('dictPromptInput').value.trim().toLowerCase();
+  const typed=document.getElementById('dictStudentInput').value.trim().toLowerCase();
+  if(!prompt||!typed)return;
+  const pass=prompt===typed;
+  const res=document.getElementById('dictResult');
+  res.style.display=''; res.className='dict-result '+(pass?'correct':'wrong');
+  res.textContent=pass?`✓ Correct! "${prompt}"`:(`✗ "${typed}" — correct: "${prompt}"`);
+  if(pass){S.correct++;awardCoins(15,'dictation');updateScoreBar();}
+  addLog(pass?'correct':'wrong',`Dict "${prompt}" → "${typed}" ${pass?'✓':'✗'}`,'dictLog');
+  phaseDictationLog(S.roomId,prompt,typed);
+  setTimeout(()=>{res.style.display='none';document.getElementById('dictStudentInput').value='';},2500);
+});
+document.getElementById('dictStudentInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('dictCheckBtn').click();});
+
+// Profiles
+document.getElementById('saveProfileBtn').addEventListener('click',async()=>{
+  if(!S.student){alert('Enter a student name first.');return;}
+  await saveProfile(S.student,S.step,S.reviewSteps.join(','),document.getElementById('customTiles').value,document.getElementById('syllTrays').value);
+  alert(`Profile saved for ${S.student}!`);
+});
+document.getElementById('loadProfileBtn').addEventListener('click',async()=>{
+  const name=document.getElementById('studentName').value.trim();
+  if(!name){alert('Enter a student name to load.');return;}
+  const p=await getProfile(name);
+  if(!p){alert(`No profile found for "${name}".`);return;}
+  document.getElementById('substep').value=p.step||'';
+  document.getElementById('customTiles').value=p.customTiles||'';
+  document.getElementById('syllTrays').value=p.syllables||'2';
+  populateReviewChecks(p.step);
+  if(p.reviewStepsCSV){
+    const rs=p.reviewStepsCSV.split(',').map(s=>s.trim());
+    document.querySelectorAll('.step-check').forEach(el=>{if(rs.includes(el.dataset.step))el.classList.add('checked');});
+    updateReviewCount();
+  }
+  alert(`Profile loaded for ${name}!`);
+});
+
+// Summary
+document.getElementById('summaryBtn').addEventListener('click',()=>{
+  const modal=document.getElementById('summaryModal');
+  const content=document.getElementById('summaryContent');
+  if(!S.sessionActive){content.innerHTML='<p style="color:var(--muted)">No active session.</p>';modal.classList.add('open');return;}
+  const history=(_rooms[S.roomId]||{}).history||[];
+  const rows=history.filter(h=>h.phase);
+  if(!rows.length){content.innerHTML='<p style="color:var(--muted)">No activity logged yet.</p>';modal.classList.add('open');return;}
+  const total=rows.length;
+  const correct=rows.filter(r=>r.correct===true||r.pass===true).length;
+  const pct=Math.round((correct/total)*100);
+  content.innerHTML=`
+    <div style="display:flex;gap:20px;margin-bottom:16px;flex-wrap:wrap;">
+      <div><div style="font-size:11px;color:var(--muted);">STUDENT</div><div style="font-size:18px;font-weight:700;">${S.student}</div></div>
+      <div><div style="font-size:11px;color:var(--muted);">STEP</div><div style="font-size:18px;font-weight:700;">${S.step}</div></div>
+      <div><div style="font-size:11px;color:var(--muted);">ACCURACY</div><div style="font-size:18px;font-weight:700;color:var(--success);">${pct}%</div></div>
+      <div><div style="font-size:11px;color:var(--muted);">COINS EARNED</div><div style="font-size:18px;font-weight:700;color:var(--accent);">${S.coins}</div></div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead><tr style="color:var(--muted);border-bottom:1px solid var(--border);">
+        <th style="text-align:left;padding:6px;">Phase</th><th style="text-align:left;padding:6px;">Item</th><th style="text-align:left;padding:6px;">Result</th>
+      </tr></thead>
+      <tbody>${rows.map(r=>`<tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:6px;">${r.phase}</td>
+        <td style="padding:6px;">${r.grapheme||r.word||r.promptWord||'—'}</td>
+        <td style="padding:6px;color:${(r.correct||r.pass)?'var(--success)':'var(--danger)'};">${(r.correct||r.pass)?'✓':'✗'}</td>
+      </tr>`).join('')}</tbody>
+    </table>`;
+  modal.classList.add('open');
+});
+document.getElementById('exportSummaryBtn').addEventListener('click',()=>{
+  const history=(_rooms[S.roomId]||{}).history||[];
+  const rows=history.filter(h=>h.phase);
+  if(!rows.length)return;
+  const csv=['Phase,Item,Result,Time']
+    .concat(rows.map(r=>`${r.phase},${r.grapheme||r.word||r.promptWord||''},${(r.correct||r.pass)?'Correct':'Incorrect'},${r.ts}`))
+    .join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv,'+encodeURIComponent(csv);
+  a.download=`WBR_${S.student}_${S.step}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+});
+
+// TTS
+function speak(text){
+  if(!text)return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.rate=0.85; u.lang='en-US';
+  window.speechSynthesis.speak(u);
+}
+
+// Log helper
+function addLog(type,msg,logId){
+  S.log.push({type,msg,ts:new Date().toLocaleTimeString()});
+  if(logId){
+    const el=document.getElementById(logId);
+    if(el){
+      const d=document.createElement('div');
+      d.className=`log-entry ${type}`;
+      d.textContent=`${new Date().toLocaleTimeString()} — ${msg}`;
+      el.appendChild(d); el.scrollTop=el.scrollHeight;
+    }
+  }
+}
+
+populateSubsteps();
+</script>
 </body>
 </html>
