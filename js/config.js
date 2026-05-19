@@ -20,78 +20,266 @@ const LCONFIG = {
 
 const BUILTIN = {
   graphemesByStep: {
-    // Step 1
-    '1.1': ['a','e','i','o','u','f','d','g','l','t','b','m','p','n','s'],
-    '1.2': ['a','e','i','o','u','c','h','j','k','r','v','w','x','y','z'],
-    '1.3': ['a','e','i','o','u','sh','th','wh','ch','ck','qu'],
-    '1.4': ['a','e','i','o','u','ff','ll','ss','zz','all','am','an'],
-    '1.5': ['a','e','i','o','u','ang','ank','ing','ink','ong','onk','ung','unk'],
-    '1.6': ['a','e','i','o','u','bl','br','cl','cr','dr','fl','fr','gl','gr','pl','pr','sk','sl','sm','sn','sp','st','sw','tr','tw'],
-    // Step 2
-    '2.1': ['a','e','i','o','u','ang','ank','ing','ink','ong','onk','ung','unk','sh','th','ch','ck','wh'],
-    '2.2': ['a','e','i','o','u','ar','or'],
-    '2.3': ['a','e','i','o','u','er','ir','ur'],
-    '2.4': ['a','e','i','o','u','ai','ay','ee','ea','oa','ow','oe'],
-    '2.5': ['a','e','i','o','u','oi','oy','ou','ow','oo'],
-    // Step 3
-    '3.1': ['ed','ing','s','es','er','est','ly','y','en','le'],
-    '3.2': ['re','un','dis','pre','mis','non'],
-    '3.3': ['tion','sion','ture','tive','ness','ment','ful','less','ous'],
-    '3.4': ['ex','de','com','con','pro','ab','ad','sub','per','trans'],
-    '3.5': ['ible','able','al','ial','ic','ics','ive','ize','ise','ify'],
-    // Step 4
-    '4.1': ['ce','ci','cy','ge','gi','gy'],
-    '4.2': ['dge','tch','ph'],
-    '4.3': ['wr','kn','gn','mb','mn'],
-    '4.4': ['tion','sion','cian','cion'],
-    // Step 5
-    '5.1': ['re','un','dis','pre','mis','non','ex','de','com','con','pro'],
-    '5.2': ['ness','ment','ful','less','ous','tion','sion','ture','tive','ly'],
-    '5.3': ['bi','tri','mid','over','under','out','up','semi'],
-    '5.4': ['ary','ery','ory','ant','ent','ance','ence'],
-    '5.5': ['inter','intra','super','fore','post','anti','auto'],
-    // Step 6
-    '6.1': ['duct','port','ject','tract','rupt','scrib','script','dict','aud','vis'],
-    // Step 7
+    // ── STEP 1 ──────────────────────────────────────────────────────────
+    // 1.1: For severely deficient students — first consonants + vowels a,i,o
+    '1.1': ['a','i','o','d','f','g','l','m','n','p','r','s','t'],
+    // 1.2: Remaining letters + digraphs (for severely deficient students)
+    '1.2': ['b','c','e','h','j','k','qu','u','v','w','x','y','z','ch','ck','sh','th','wh'],
+    // 1.3: TYPICAL STARTING POINT — all vowels, consonants, digraphs
+    '1.3': ['a','e','i','o','u','b','c','d','f','g','h','j','k','l','m','n','p','qu','r','s','t','v','w','x','y','z','ch','ck','sh','th','wh'],
+    // 1.4: Bonus letters (ff,ll,ss) + welded sound ALL
+    '1.4': ['ff','ll','ss','all'],
+    // 1.5: Welded sounds AM and AN
+    '1.5': ['am','an'],
+    // 1.6: Suffixes -s and -es
+    '1.6': ['s','es'],
+    // ── STEP 2 ──────────────────────────────────────────────────────────
+    // 2.1: Welded sounds -ng and -nk families
+    '2.1': ['ang','ank','ing','ink','ong','onk','ung','unk'],
+    // 2.2: 2-letter blends (combinations of existing graphemes — no new tiles)
+    '2.2': [],
+    // 2.3: Closed syllable exceptions
+    '2.3': ['ild','ind','old','olt','ost'],
+    // 2.4: 3-sound blends + digraph blends + Latin bases
+    '2.4': ['fess','gress','mand','mit','pel','pend','press','rupt','sent','sist','stant','sult','tend','tent','vent'],
+    // 2.5: CT bases
+    '2.5': ['dict','duct','fect','flect','flict','ject','lect','pact','rect','sect','spect','struct','tact','tract','vict'],
+    // ── STEP 3 ──────────────────────────────────────────────────────────
+    // 3.1: Schwa + prefixes mid-,mis-,non-,trans-,un-
+    '3.1': ['mid','mis','non','trans','un'],
+    // 3.2: Prefixes ab-,ad-,con-,com-,ex-,ob-,dis-,en-,em-,in-,im-,sub-
+    '3.2': ['ab','ad','con','com','ex','ob','dis','en','em','in','im','sub'],
+    // 3.3: empty — multisyllabic practice
+    '3.3': [],
+    // 3.4: empty — syllable division practice
+    '3.4': [],
+    // 3.5: Suffixes -ed and -ing
+    '3.5': ['ed','ing'],
+    // ── STEP 4 ──────────────────────────────────────────────────────────
+    // 4.1: VCE syllable — a-e,e-e,o-e,u-e(ū),u-e(ü) + Latin bases
+    '4.1': ['a-e','e-e','o-e','u-e','clude','fuse','pose','pute','quire','scribe','spire','sume','vise','voke'],
+    // 4.2: empty — VCE practice
+    '4.2': [],
+    // 4.3: empty — VCE practice
+    '4.3': [],
+    // 4.4: Welded IVE + suffix -ive
+    '4.4': ['ive'],
+    // ── STEP 5 ──────────────────────────────────────────────────────────
+    // 5.1: Open syllable + prefixes co-,de-,e-,pre-,pro-,re- + vowel y (ī and ē)
+    '5.1': ['co','de','e','pre','pro','re','y'],
+    // 5.2: empty — open syllable practice
+    '5.2': [],
+    // 5.3: empty — open syllable practice
+    '5.3': [],
+    // 5.4: empty — open syllable practice
+    '5.4': [],
+    // 5.5: Prefix a-
+    '5.5': ['a'],
+    // ── STEP 6 ──────────────────────────────────────────────────────────
+    // 6.1: Suffixes -able,-en,-er,-est,-ish,-or,-y,-ful,-less,-ly,-ment,-ness,-ty
+    '6.1': ['able','en','er','est','ish','or','y','ful','less','ly','ment','ness','ty'],
+    // 6.2: empty — practice
+    '6.2': [],
+    // 6.3: empty — practice
+    '6.3': [],
+    // 6.4: Welded STLE
+    '6.4': ['stle'],
+    // ── STEP 7 ──────────────────────────────────────────────────────────
+    // 7.1: Soft c (ce,ci,cy) + soft g (ge,gi,gy)
     '7.1': ['ce','ci','cy','ge','gi','gy'],
-    '7.2': ['dge','nce','nge','lge','rge'],
-    '7.3': ['ph','tch','photo'],
-    '7.4': ['tion','sion','ion'],
+    // 7.2: Trigraph dge
+    '7.2': ['dge'],
+    // 7.3: Digraph ph + trigraph tch
+    '7.3': ['ph','tch'],
+    // 7.4: Final stable syllable -tion, -sion
+    '7.4': ['tion','sion'],
+    // 7.5: Contractions + possessives
     '7.5': ["n't","'ll","'re","'ve","'s","'d","'m"],
-    // Step 8
-    '8.1': ['ar','er','ir','or','ur','port'],
-    '8.2': ['ar','or','port','form','fort'],
-    '8.3': ['er','ir','ur','therm','inter'],
+    // ── STEP 8 ──────────────────────────────────────────────────────────
+    // 8.1: R-controlled syllable ar,er,ir,or,ur
+    '8.1': ['ar','er','ir','or','ur'],
+    // 8.2: ar,or in multisyllabic words — no new graphemes
+    '8.2': [],
+    // 8.3: Greek combining form -therm-; connecting vowel o
+    '8.3': ['therm'],
+    // 8.4: R-controlled exceptions rr; prefix para-
     '8.4': ['rr','para'],
-    '8.5': ['ward','ar','or','ard'],
-    // Step 9
+    // 8.5: -ar,-or,-ard at end of word; suffix -ward
+    '8.5': ['ward','ard'],
+    // ── STEP 9 ──────────────────────────────────────────────────────────
+    // 9.1: Vowel digraphs ai, ay
     '9.1': ['ai','ay'],
+    // 9.2: Vowel digraphs ee, ey
     '9.2': ['ee','ey'],
+    // 9.3: Vowel digraphs oa, oe, ue
     '9.3': ['oa','oe','ue'],
+    // 9.4: Diphthongs oi, oy, au, aw
     '9.4': ['oi','oy','au','aw'],
+    // 9.5: ou, ow, oo
     '9.5': ['ou','ow','oo'],
+    // 9.6: ea (3 sounds — eat, bread, steak)
     '9.6': ['ea'],
+    // 9.7: eu, ew, ui
     '9.7': ['eu','ew','ui'],
-    // Step 10
+    // ── STEP 10 ──────────────────────────────────────────────────────────
+    // 10.1: Suffixes with silent e: -ace,-age,-ate,-ice,-ile,-ine,-ite
     '10.1': ['ace','age','ate','ice','ile','ine','ite'],
-    '10.2': ['ing','ly','able','ment','ness','ed'],
-    '10.3': ['ed','ing','er','est'],
-    '10.4': ['ed','ing','er'],
-    '10.5': ['ary','ery','ory','ic','ism','ist','ity','ize','ant','ance','ancy','ent','ence','ency','able','ably','ible','ibly'],
-    '10.6': ['ory','ible','ent','ant','ive'],
-    // Step 11
-    '11.1': ['y','hydro','hyper','hypo'],
-    '11.2': ['y','ies','ied','ily','iness'],
+    // 10.2: Spelling rule — suffix to base ending in e (no new graphemes)
+    '10.2': [],
+    // 10.3: Spelling rule — suffix to closed/r-controlled base (no new graphemes)
+    '10.3': [],
+    // 10.4: Spelling rule — doubling final consonant (no new graphemes)
+    '10.4': [],
+    // 10.5: Additional suffixes
+    '10.5': ['ary','ery','ory','ic','ism','ist','ity','ize','ant','ance','ancy','ent','ence','ency','ably','ibly','ibility','ability'],
+    // 10.6: Complex Latin base + suffix (no new graphemes)
+    '10.6': [],
+    // ── STEP 11 ──────────────────────────────────────────────────────────
+    // 11.1: Greek combining forms hydro-,hyper-,hypo-
+    '11.1': ['hydro','hyper','hypo'],
+    // 11.2: y spelling rule derivatives
+    '11.2': ['ies','ied','ily','iness'],
+    // 11.3: igh, eigh
     '11.3': ['igh','eigh'],
+    // 11.4: ie, ei
     '11.4': ['ie','ei'],
+    // 11.5: Greek word elements bio-,-mania,-phobia
     '11.5': ['bio','mania','phobia'],
-    // Step 12
-    '12.1': ['geo','ea','eo','ia','io','ua','uo'],
+    // ── STEP 12 ──────────────────────────────────────────────────────────
+    // 12.1: Split vowels; Greek combining form geo-
+    '12.1': ['geo'],
+    // 12.2: Silent letters gh,gn,kn,mb,mn,rh,wr; Latin base -sign-
     '12.2': ['gh','gn','kn','mb','mn','rh','wr','sign'],
-    '12.3': ['wa','wo','wor','war'],
-    '12.4': ['ch','que','chron','psych'],
-    '12.5': ['al','an','ous','ure','tion','ture','ial','ual'],
-    '12.6': ['ac','af','ag','al','an','ap','ar','as','at','ob','oc','of','op','com','col','cor','il','im','ir','sub','suc','suf','sup','sus'],
+    // 12.3: /w/ affecting vowels (no new graphemes — same tiles, different sounds)
+    '12.3': [],
+    // 12.4: ch/que=/k/; Greek chron-,psych-
+    '12.4': ['que','chron','psych'],
+    // 12.5: Additional suffixes + welded sounds in final stable syllables
+    '12.5': ['tious','cious','tial','cial','tient','cient','cian','sure','ture'],
+    // 12.6: Assimilated prefixes
+    '12.6': ['ac','af','ag','ap','as','at','ob','oc','of','op','col','cor','il','im','ir','suc','suf','sup','sus'],
+  },
+
+  // ── TILE CATEGORIES ─────────────────────────────────────────────────
+  // Defines color and category for every grapheme tile
+  // Colors match physical Wilson tiles:
+  //   consonant    → light yellow  (#f5e642)
+  //   vowel        → pink          (#f4a7b9)
+  //   welded       → green         (#7ec87e)
+  //   prefix       → bright yellow (#ffe000)
+  //   suffix       → bright yellow (#ffe000)
+  //   latin        → white         (#f5f5f5)
+  //   greek        → white         (#f5f5f5)
+  //   exception    → green         (#7ec87e)
+
+  tileCategories: {
+    // ── Consonants (light yellow) ──
+    'b':'consonant','c':'consonant','d':'consonant','f':'consonant',
+    'g':'consonant','h':'consonant','j':'consonant','k':'consonant',
+    'l':'consonant','m':'consonant','n':'consonant','p':'consonant',
+    'qu':'consonant','r':'consonant','s':'consonant','t':'consonant',
+    'v':'consonant','w':'consonant','x':'consonant','y':'consonant','z':'consonant',
+    // Digraphs (light yellow)
+    'ch':'consonant','ck':'consonant','sh':'consonant','th':'consonant','wh':'consonant',
+    'ph':'consonant','dge':'consonant','tch':'consonant',
+    // Bonus letters / doublets (light yellow)
+    'ff':'consonant','ll':'consonant','ss':'consonant',
+    // Blends — represented by component tiles, no separate category needed
+    // Silent letter combos (light yellow)
+    'gh':'consonant','gn':'consonant','kn':'consonant','mb':'consonant',
+    'mn':'consonant','rh':'consonant','wr':'consonant',
+    // ── Vowels (pink) ──
+    'a':'vowel','e':'vowel','i':'vowel','o':'vowel','u':'vowel',
+    // Schwa (pink)
+    'ə':'vowel',
+    // Vowel teams (pink)
+    'ai':'vowel','ay':'vowel','ee':'vowel','ey':'vowel',
+    'oa':'vowel','oe':'vowel','ue':'vowel',
+    'oi':'vowel','oy':'vowel','au':'vowel','aw':'vowel',
+    'ou':'vowel','ow':'vowel','oo':'vowel','ea':'vowel',
+    'eu':'vowel','ew':'vowel','ui':'vowel',
+    'ie':'vowel','ei':'vowel','igh':'vowel','eigh':'vowel',
+    // VCE markers (pink)
+    'a-e':'vowel','e-e':'vowel','o-e':'vowel','u-e':'vowel',
+    // R-controlled (pink)
+    'ar':'vowel','er':'vowel','ir':'vowel','or':'vowel','ur':'vowel',
+    'rr':'vowel','ward':'vowel','ard':'vowel',
+    // Y as vowel (pink)
+    'y':'vowel',
+    // ── Welded sounds (green) ──
+    'all':'welded','am':'welded','an':'welded',
+    'ang':'welded','ank':'welded','ing':'welded','ink':'welded',
+    'ong':'welded','onk':'welded','ung':'welded','unk':'welded',
+    'ive':'welded','stle':'welded',
+    // Final stable syllables (green)
+    'tion':'welded','sion':'welded','ture':'welded','tious':'welded',
+    'cious':'welded','tial':'welded','cial':'welded',
+    'tient':'welded','cient':'welded','cian':'welded',
+    'sure':'welded','sign':'welded',
+    // ── Closed syllable exceptions (green) ──
+    'ild':'welded','ind':'welded','old':'welded','olt':'welded','ost':'welded',
+    // ── Prefixes (bright yellow) ──
+    'mid':'prefix','mis':'prefix','non':'prefix','trans':'prefix','un':'prefix',
+    'ab':'prefix','ad':'prefix','con':'prefix','com':'prefix','ex':'prefix',
+    'ob':'prefix','dis':'prefix','en':'prefix','em':'prefix','in':'prefix',
+    'im':'prefix','sub':'prefix',
+    'co':'prefix','de':'prefix','pre':'prefix','pro':'prefix','re':'prefix',
+    'a':'prefix',
+    'bi':'prefix','tri':'prefix','over':'prefix','under':'prefix',
+    'out':'prefix','up':'prefix','semi':'prefix',
+    'inter':'prefix','intra':'prefix','super':'prefix','fore':'prefix',
+    'post':'prefix','anti':'prefix','auto':'prefix',
+    'para':'prefix','hydro':'prefix','hyper':'prefix','hypo':'prefix',
+    'bio':'prefix','geo':'prefix','chron':'prefix','psych':'prefix',
+    'ac':'prefix','af':'prefix','ag':'prefix','ap':'prefix','as':'prefix',
+    'at':'prefix','ob':'prefix','oc':'prefix','of':'prefix','op':'prefix',
+    'col':'prefix','cor':'prefix','il':'prefix','ir':'prefix',
+    'suc':'prefix','suf':'prefix','sup':'prefix','sus':'prefix',
+    // ── Suffixes (bright yellow) ──
+    's':'suffix','es':'suffix','ed':'suffix','ing':'suffix',
+    'er':'suffix','est':'suffix','ly':'suffix','en':'suffix','le':'suffix',
+    'able':'suffix','ful':'suffix','less':'suffix','ment':'suffix',
+    'ness':'suffix','ish':'suffix','or':'suffix','ty':'suffix',
+    'ary':'suffix','ery':'suffix','ory':'suffix',
+    'ant':'suffix','ent':'suffix','ance':'suffix','ence':'suffix',
+    'ism':'suffix','ist':'suffix','ity':'suffix','ize':'suffix',
+    'ancy':'suffix','ency':'suffix','ably':'suffix','ibly':'suffix',
+    'ibility':'suffix','ability':'suffix',
+    'ace':'suffix','age':'suffix','ate':'suffix','ice':'suffix',
+    'ile':'suffix','ine':'suffix','ite':'suffix',
+    'ies':'suffix','ied':'suffix','ily':'suffix','iness':'suffix',
+    'ive-suffix':'suffix',  // suffix role of ive
+    'al':'suffix','an':'suffix','ous':'suffix','ure':'suffix',
+    'tious':'suffix','cious':'suffix','tial':'suffix','cial':'suffix',
+    // ── Latin bases (white) ──
+    'fess':'latin','gress':'latin','mand':'latin','mit':'latin',
+    'pel':'latin','pend':'latin','press':'latin','rupt':'latin',
+    'sent':'latin','sist':'latin','stant':'latin','sult':'latin',
+    'tend':'latin','tent':'latin','vent':'latin',
+    'dict':'latin','duct':'latin','fect':'latin','flect':'latin',
+    'flict':'latin','ject':'latin','lect':'latin','pact':'latin',
+    'rect':'latin','sect':'latin','spect':'latin','struct':'latin',
+    'tact':'latin','tract':'latin','vict':'latin',
+    'clude':'latin','fuse':'latin','pose':'latin','pute':'latin',
+    'quire':'latin','scribe':'latin','spire':'latin','sume':'latin',
+    'vise':'latin','voke':'latin',
+    // ── Greek bases (white) ──
+    'therm':'greek','photo':'greek','graph':'greek',
+    'hydro':'greek','hyper':'greek','hypo':'greek',
+    'bio':'greek','mania':'greek','phobia':'greek',
+    'geo':'greek','chron':'greek','psych':'greek',
+    'que':'greek',
+  },
+
+  // Color map for tile categories
+  tileColors: {
+    'consonant': { bg:'#4a3d00', text:'#f5e060', border:'#7a6500' },
+    'vowel':     { bg:'#3d1020', text:'#f4a7b9', border:'#7a2040' },
+    'welded':    { bg:'#0d2e0d', text:'#7ec87e', border:'#1a5a1a' },
+    'prefix':    { bg:'#3a3000', text:'#ffe000', border:'#6a5500' },
+    'suffix':    { bg:'#3a3000', text:'#ffe000', border:'#6a5500' },
+    'latin':     { bg:'#2a2a2a', text:'#f0f0f0', border:'#505050' },
+    'greek':     { bg:'#2a2a2a', text:'#f0f0f0', border:'#505050' },
   },
 
   wordBank: [
@@ -1900,16 +2088,16 @@ const SOUND_CARDS = [
   { grapheme:'y',  step:'1.2', cat:'consonant', sounds:[{p:'/y/',k:'yellow'}] },
   { grapheme:'z',  step:'1.2', cat:'consonant', sounds:[{p:'/z/',k:'zebra'}] },
   // Consonant digraphs
-  { grapheme:'wh', step:'1.2', cat:'digraph', sounds:[{p:'/w/',k:'whistle'},{p:'/hw/',k:'whistle'}] },
-  { grapheme:'ch', step:'1.2', cat:'digraph', sounds:[{p:'/ch/',k:'chin'},{p:'/k/',k:'chorus',sub:'12.4'}] },
-  { grapheme:'sh', step:'1.2', cat:'digraph', sounds:[{p:'/sh/',k:'ship'}] },
-  { grapheme:'th', step:'1.2', cat:'digraph', sounds:[{p:'/th/',k:'thumb'}] },
-  { grapheme:'ck', step:'1.2', cat:'digraph', sounds:[{p:'/k/',k:'sock'}] },
-  { grapheme:'ph', step:'7.3', cat:'digraph', sounds:[{p:'/f/',k:'phone'}] },
+  { grapheme:'wh', step:'1.2', cat:'consonant', sounds:[{p:'/w/',k:'whistle'},{p:'/hw/',k:'whistle'}] },
+  { grapheme:'ch', step:'1.2', cat:'consonant', sounds:[{p:'/ch/',k:'chin'},{p:'/k/',k:'chorus',sub:'12.4'}] },
+  { grapheme:'sh', step:'1.2', cat:'consonant', sounds:[{p:'/sh/',k:'ship'}] },
+  { grapheme:'th', step:'1.2', cat:'consonant', sounds:[{p:'/th/',k:'thumb'}] },
+  { grapheme:'ck', step:'1.2', cat:'consonant', sounds:[{p:'/k/',k:'sock'}] },
+  { grapheme:'ph', step:'7.3', cat:'consonant', sounds:[{p:'/f/',k:'phone'}] },
   // Trigraphs
-  { grapheme:'dge',step:'7.2', cat:'trigraph', sounds:[{p:'/j/',k:'fudge'}] },
-  { grapheme:'tch',step:'7.3', cat:'trigraph', sounds:[{p:'/ch/',k:'catch'}] },
-  { grapheme:'que',step:'12.4',cat:'trigraph', sounds:[{p:'/k/',k:'clique'}] },
+  { grapheme:'dge',step:'7.2', cat:'consonant', sounds:[{p:'/j/',k:'fudge'}] },
+  { grapheme:'tch',step:'7.3', cat:'consonant', sounds:[{p:'/ch/',k:'catch'}] },
+  { grapheme:'que',step:'12.4',cat:'consonant', sounds:[{p:'/k/',k:'clique'}] },
   // Short vowels (with all sounds by substep)
   { grapheme:'a', step:'1.1', cat:'vowel', sounds:[{p:'/ă/',k:'apple'},{p:'/ā/',k:'safe',sub:'4.1'},{p:'/ā/',k:'acorn',sub:'5.1'},{p:'/ə/',k:'Alaska',sub:'5.5'}] },
   { grapheme:'e', step:'1.2', cat:'vowel', sounds:[{p:'/ĕ/',k:'Ed'},{p:'/ē/',k:'Pete',sub:'4.1'},{p:'/ē/',k:'me',sub:'5.1'}] },
@@ -1930,69 +2118,69 @@ const SOUND_CARDS = [
   { grapheme:'ung',step:'2.1', cat:'welded', sounds:[{p:'/ung/',k:'lung'}] },
   { grapheme:'unk',step:'2.1', cat:'welded', sounds:[{p:'/unk/',k:'junk'}] },
   // Closed syllable exceptions
-  { grapheme:'ild',step:'2.3', cat:'exception', sounds:[{p:'/īld/',k:'wild'}] },
-  { grapheme:'ind',step:'2.3', cat:'exception', sounds:[{p:'/īnd/',k:'find'}] },
-  { grapheme:'old',step:'2.3', cat:'exception', sounds:[{p:'/ōld/',k:'cold'}] },
-  { grapheme:'olt',step:'2.3', cat:'exception', sounds:[{p:'/ōlt/',k:'colt'}] },
-  { grapheme:'ost',step:'2.3', cat:'exception', sounds:[{p:'/ōst/',k:'post'}] },
+  { grapheme:'ild',step:'2.3', cat:'welded', sounds:[{p:'/īld/',k:'wild'}] },
+  { grapheme:'ind',step:'2.3', cat:'welded', sounds:[{p:'/īnd/',k:'find'}] },
+  { grapheme:'old',step:'2.3', cat:'welded', sounds:[{p:'/ōld/',k:'cold'}] },
+  { grapheme:'olt',step:'2.3', cat:'welded', sounds:[{p:'/ōlt/',k:'colt'}] },
+  { grapheme:'ost',step:'2.3', cat:'welded', sounds:[{p:'/ōst/',k:'post'}] },
   // R-controlled
-  { grapheme:'ar', step:'8.1', cat:'r-ctrl', sounds:[{p:'/ar/',k:'car'},{p:'/ər/',k:'beggar',sub:'8.5'},{p:'/or/',k:'warm',sub:'12.3',note:'after w'}] },
-  { grapheme:'er', step:'8.1', cat:'r-ctrl', sounds:[{p:'/ər/',k:'her'}] },
-  { grapheme:'ir', step:'8.1', cat:'r-ctrl', sounds:[{p:'/ər/',k:'bird'}] },
-  { grapheme:'or', step:'8.1', cat:'r-ctrl', sounds:[{p:'/or/',k:'horn'},{p:'/ər/',k:'doctor',sub:'8.5'},{p:'/ər/',k:'worm',sub:'12.3',note:'after w'}] },
-  { grapheme:'ur', step:'8.1', cat:'r-ctrl', sounds:[{p:'/ər/',k:'burn'}] },
+  { grapheme:'ar', step:'8.1', cat:'vowel', sounds:[{p:'/ar/',k:'car'},{p:'/ər/',k:'beggar',sub:'8.5'},{p:'/or/',k:'warm',sub:'12.3',note:'after w'}] },
+  { grapheme:'er', step:'8.1', cat:'vowel', sounds:[{p:'/ər/',k:'her'}] },
+  { grapheme:'ir', step:'8.1', cat:'vowel', sounds:[{p:'/ər/',k:'bird'}] },
+  { grapheme:'or', step:'8.1', cat:'vowel', sounds:[{p:'/or/',k:'horn'},{p:'/ər/',k:'doctor',sub:'8.5'},{p:'/ər/',k:'worm',sub:'12.3',note:'after w'}] },
+  { grapheme:'ur', step:'8.1', cat:'vowel', sounds:[{p:'/ər/',k:'burn'}] },
   // Vowel digraphs/diphthongs
-  { grapheme:'ai',  step:'9.1', cat:'vowel-d', sounds:[{p:'/ā/',k:'bait'}] },
-  { grapheme:'ay',  step:'9.1', cat:'vowel-d', sounds:[{p:'/ā/',k:'play'}] },
-  { grapheme:'ee',  step:'9.2', cat:'vowel-d', sounds:[{p:'/ē/',k:'jeep'}] },
-  { grapheme:'ey',  step:'9.2', cat:'vowel-d', sounds:[{p:'/ē/',k:'valley'}] },
-  { grapheme:'oa',  step:'9.3', cat:'vowel-d', sounds:[{p:'/ō/',k:'boat'}] },
-  { grapheme:'oe',  step:'9.3', cat:'vowel-d', sounds:[{p:'/ō/',k:'toe'}] },
-  { grapheme:'ue',  step:'9.3', cat:'vowel-d', sounds:[{p:'/ü/',k:'blue'},{p:'/ū/',k:'rescue'}] },
-  { grapheme:'oi',  step:'9.4', cat:'vowel-d', sounds:[{p:'/oi/',k:'coin'}] },
-  { grapheme:'oy',  step:'9.4', cat:'vowel-d', sounds:[{p:'/oi/',k:'boy'}] },
-  { grapheme:'au',  step:'9.4', cat:'vowel-d', sounds:[{p:'/ô/',k:'August'}] },
-  { grapheme:'aw',  step:'9.4', cat:'vowel-d', sounds:[{p:'/ô/',k:'saw'}] },
-  { grapheme:'ou',  step:'9.5', cat:'vowel-d', sounds:[{p:'/ou/',k:'trout'},{p:'/ü/',k:'soup'}] },
-  { grapheme:'ow',  step:'9.5', cat:'vowel-d', sounds:[{p:'/ō/',k:'snow'},{p:'/ou/',k:'plow'}] },
-  { grapheme:'oo',  step:'9.5', cat:'vowel-d', sounds:[{p:'/ü/',k:'school'},{p:'/u/',k:'book'}] },
-  { grapheme:'ea',  step:'9.6', cat:'vowel-d', sounds:[{p:'/ē/',k:'eat'},{p:'/ĕ/',k:'bread'},{p:'/ā/',k:'steak'}] },
-  { grapheme:'eu',  step:'9.7', cat:'vowel-d', sounds:[{p:'/ü/',k:'deuce'},{p:'/ū/',k:'feud'}] },
-  { grapheme:'ew',  step:'9.7', cat:'vowel-d', sounds:[{p:'/ü/',k:'chew'},{p:'/ū/',k:'few'}] },
-  { grapheme:'ui',  step:'9.7', cat:'vowel-d', sounds:[{p:'/ü/',k:'suit'}] },
+  { grapheme:'ai',  step:'9.1', cat:'vowel', sounds:[{p:'/ā/',k:'bait'}] },
+  { grapheme:'ay',  step:'9.1', cat:'vowel', sounds:[{p:'/ā/',k:'play'}] },
+  { grapheme:'ee',  step:'9.2', cat:'vowel', sounds:[{p:'/ē/',k:'jeep'}] },
+  { grapheme:'ey',  step:'9.2', cat:'vowel', sounds:[{p:'/ē/',k:'valley'}] },
+  { grapheme:'oa',  step:'9.3', cat:'vowel', sounds:[{p:'/ō/',k:'boat'}] },
+  { grapheme:'oe',  step:'9.3', cat:'vowel', sounds:[{p:'/ō/',k:'toe'}] },
+  { grapheme:'ue',  step:'9.3', cat:'vowel', sounds:[{p:'/ü/',k:'blue'},{p:'/ū/',k:'rescue'}] },
+  { grapheme:'oi',  step:'9.4', cat:'vowel', sounds:[{p:'/oi/',k:'coin'}] },
+  { grapheme:'oy',  step:'9.4', cat:'vowel', sounds:[{p:'/oi/',k:'boy'}] },
+  { grapheme:'au',  step:'9.4', cat:'vowel', sounds:[{p:'/ô/',k:'August'}] },
+  { grapheme:'aw',  step:'9.4', cat:'vowel', sounds:[{p:'/ô/',k:'saw'}] },
+  { grapheme:'ou',  step:'9.5', cat:'vowel', sounds:[{p:'/ou/',k:'trout'},{p:'/ü/',k:'soup'}] },
+  { grapheme:'ow',  step:'9.5', cat:'vowel', sounds:[{p:'/ō/',k:'snow'},{p:'/ou/',k:'plow'}] },
+  { grapheme:'oo',  step:'9.5', cat:'vowel', sounds:[{p:'/ü/',k:'school'},{p:'/u/',k:'book'}] },
+  { grapheme:'ea',  step:'9.6', cat:'vowel', sounds:[{p:'/ē/',k:'eat'},{p:'/ĕ/',k:'bread'},{p:'/ā/',k:'steak'}] },
+  { grapheme:'eu',  step:'9.7', cat:'vowel', sounds:[{p:'/ü/',k:'deuce'},{p:'/ū/',k:'feud'}] },
+  { grapheme:'ew',  step:'9.7', cat:'vowel', sounds:[{p:'/ü/',k:'chew'},{p:'/ū/',k:'few'}] },
+  { grapheme:'ui',  step:'9.7', cat:'vowel', sounds:[{p:'/ü/',k:'suit'}] },
   // y as vowel
-  { grapheme:'y (vowel)',step:'11.1',cat:'vowel-y', sounds:[{p:'/ĭ/',k:'gym',note:'closed'},{p:'/ī/',k:'type',note:'v-e'},{p:'/ī/',k:'cry',note:'open'},{p:'/ē/',k:'baby',note:'open end'}] },
+  { grapheme:'y (vowel)',step:'11.1',cat:'vowel', sounds:[{p:'/ĭ/',k:'gym',note:'closed'},{p:'/ī/',k:'type',note:'v-e'},{p:'/ī/',k:'cry',note:'open'},{p:'/ē/',k:'baby',note:'open end'}] },
   // Additional vowel combos
-  { grapheme:'igh', step:'11.3',cat:'vowel-d', sounds:[{p:'/ī/',k:'light'}] },
-  { grapheme:'eigh',step:'11.3',cat:'vowel-d', sounds:[{p:'/ā/',k:'eight'}] },
-  { grapheme:'ei',  step:'11.4',cat:'vowel-d', sounds:[{p:'/ā/',k:'vein'},{p:'/ē/',k:'ceiling'}] },
-  { grapheme:'ie',  step:'11.4',cat:'vowel-d', sounds:[{p:'/ē/',k:'piece'}] },
+  { grapheme:'igh', step:'11.3',cat:'vowel', sounds:[{p:'/ī/',k:'light'}] },
+  { grapheme:'eigh',step:'11.3',cat:'vowel', sounds:[{p:'/ā/',k:'eight'}] },
+  { grapheme:'ei',  step:'11.4',cat:'vowel', sounds:[{p:'/ā/',k:'vein'},{p:'/ē/',k:'ceiling'}] },
+  { grapheme:'ie',  step:'11.4',cat:'vowel', sounds:[{p:'/ē/',k:'piece'}] },
   // Final stable syllables
-  { grapheme:'tion', step:'7.4', cat:'final-stable', sounds:[{p:'/shən/',k:'vacation'}] },
-  { grapheme:'sion', step:'7.4', cat:'final-stable', sounds:[{p:'/shən/',k:'mansion'},{p:'/zhən/',k:'television'}] },
-  { grapheme:'sure', step:'12.5',cat:'final-stable', sounds:[{p:'/zhər/',k:'closure'},{p:'/shər/',k:'pressure'}] },
-  { grapheme:'ture', step:'12.5',cat:'final-stable', sounds:[{p:'/chər/',k:'departure'}] },
-  { grapheme:'tious',step:'12.5',cat:'final-stable', sounds:[{p:'/shəs/',k:'cautious'}] },
-  { grapheme:'cious',step:'12.5',cat:'final-stable', sounds:[{p:'/shəs/',k:'precious'}] },
-  { grapheme:'tial', step:'12.5',cat:'final-stable', sounds:[{p:'/shəl/',k:'partial'}] },
-  { grapheme:'cial', step:'12.5',cat:'final-stable', sounds:[{p:'/shəl/',k:'special'}] },
-  { grapheme:'tient',step:'12.5',cat:'final-stable', sounds:[{p:'/shənt/',k:'patient'}] },
-  { grapheme:'cient',step:'12.5',cat:'final-stable', sounds:[{p:'/shənt/',k:'ancient'}] },
-  { grapheme:'cian', step:'12.5',cat:'final-stable', sounds:[{p:'/shən/',k:'magician'}] },
+  { grapheme:'tion', step:'7.4', cat:'welded', sounds:[{p:'/shən/',k:'vacation'}] },
+  { grapheme:'sion', step:'7.4', cat:'welded', sounds:[{p:'/shən/',k:'mansion'},{p:'/zhən/',k:'television'}] },
+  { grapheme:'sure', step:'12.5',cat:'welded', sounds:[{p:'/zhər/',k:'closure'},{p:'/shər/',k:'pressure'}] },
+  { grapheme:'ture', step:'12.5',cat:'welded', sounds:[{p:'/chər/',k:'departure'}] },
+  { grapheme:'tious',step:'12.5',cat:'welded', sounds:[{p:'/shəs/',k:'cautious'}] },
+  { grapheme:'cious',step:'12.5',cat:'welded', sounds:[{p:'/shəs/',k:'precious'}] },
+  { grapheme:'tial', step:'12.5',cat:'welded', sounds:[{p:'/shəl/',k:'partial'}] },
+  { grapheme:'cial', step:'12.5',cat:'welded', sounds:[{p:'/shəl/',k:'special'}] },
+  { grapheme:'tient',step:'12.5',cat:'welded', sounds:[{p:'/shənt/',k:'patient'}] },
+  { grapheme:'cient',step:'12.5',cat:'welded', sounds:[{p:'/shənt/',k:'ancient'}] },
+  { grapheme:'cian', step:'12.5',cat:'welded', sounds:[{p:'/shən/',k:'magician'}] },
   // Silent letters
-  { grapheme:'gh', step:'12.2',cat:'silent', sounds:[{p:'/g/',k:'ghost'}] },
-  { grapheme:'gn', step:'12.2',cat:'silent', sounds:[{p:'/n/',k:'gnat'}] },
-  { grapheme:'kn', step:'12.2',cat:'silent', sounds:[{p:'/n/',k:'knife'}] },
-  { grapheme:'mb', step:'12.2',cat:'silent', sounds:[{p:'/m/',k:'lamb'}] },
-  { grapheme:'mn', step:'12.2',cat:'silent', sounds:[{p:'/m/',k:'column'}] },
-  { grapheme:'rh', step:'12.2',cat:'silent', sounds:[{p:'/r/',k:'rhyme'}] },
-  { grapheme:'wr', step:'12.2',cat:'silent', sounds:[{p:'/r/',k:'wrist'}] },
+  { grapheme:'gh', step:'12.2',cat:'consonant', sounds:[{p:'/g/',k:'ghost'}] },
+  { grapheme:'gn', step:'12.2',cat:'consonant', sounds:[{p:'/n/',k:'gnat'}] },
+  { grapheme:'kn', step:'12.2',cat:'consonant', sounds:[{p:'/n/',k:'knife'}] },
+  { grapheme:'mb', step:'12.2',cat:'consonant', sounds:[{p:'/m/',k:'lamb'}] },
+  { grapheme:'mn', step:'12.2',cat:'consonant', sounds:[{p:'/m/',k:'column'}] },
+  { grapheme:'rh', step:'12.2',cat:'consonant', sounds:[{p:'/r/',k:'rhyme'}] },
+  { grapheme:'wr', step:'12.2',cat:'consonant', sounds:[{p:'/r/',k:'wrist'}] },
   // w affecting vowels
-  { grapheme:'a/w/', step:'12.3',cat:'w-vowel', sounds:[{p:'/ô/',k:'squash'},{p:'/ô/',k:'wash'}] },
-  { grapheme:'ar/w/',step:'12.3',cat:'w-vowel', sounds:[{p:'/or/',k:'warm'}] },
-  { grapheme:'or/w/',step:'12.3',cat:'w-vowel', sounds:[{p:'/ər/',k:'worm'}] },
+  { grapheme:'a/w/', step:'12.3',cat:'vowel', sounds:[{p:'/ô/',k:'squash'},{p:'/ô/',k:'wash'}] },
+  { grapheme:'ar/w/',step:'12.3',cat:'vowel', sounds:[{p:'/or/',k:'warm'}] },
+  { grapheme:'or/w/',step:'12.3',cat:'vowel', sounds:[{p:'/ər/',k:'worm'}] },
   // Additional sounds 12.4-12.5
-  { grapheme:'ti', step:'12.5',cat:'additional', sounds:[{p:'/sh/',k:'negotiable'},{p:'/shē/',k:'negotiate'}] },
-  { grapheme:'ci', step:'12.5',cat:'additional', sounds:[{p:'/sh/',k:'glacier'},{p:'/shē/',k:'appreciate'}] },
-  { grapheme:'tu', step:'12.5',cat:'additional', sounds:[{p:'/chü/',k:'spatula'}] },
+  { grapheme:'ti', step:'12.5',cat:'latin', sounds:[{p:'/sh/',k:'negotiable'},{p:'/shē/',k:'negotiate'}] },
+  { grapheme:'ci', step:'12.5',cat:'latin', sounds:[{p:'/sh/',k:'glacier'},{p:'/shē/',k:'appreciate'}] },
+  { grapheme:'tu', step:'12.5',cat:'latin', sounds:[{p:'/chü/',k:'spatula'}] },
 ];
