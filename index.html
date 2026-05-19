@@ -637,6 +637,14 @@ document.getElementById('awardCoinsBtn').addEventListener('click',()=>{
 const CAT_LABELS={'consonant':'Consonants, Digraphs & Blends','vowel':'Vowels, Vowel Teams, R-Controlled & Schwa','welded':'Welded Sounds, Exceptions & Final Stable Syllables','prefix':'Prefixes','suffix':'Suffixes','latin':'Latin Bases','greek':'Greek Bases & Combining Forms'};
 const CAT_ORDER=['consonant','vowel','welded','prefix','suffix','latin','greek'];
 
+function getTileCat(grapheme) {
+  // Look up category, handling dash-prefixed suffixes like -s, -es
+  if (BUILTIN.tileCategories) {
+    return BUILTIN.tileCategories[grapheme] || BUILTIN.tileCategories[grapheme.replace(/^-/,'')] || 'consonant';
+  }
+  return 'consonant';
+}
+
 function buildCardLib(){
   if(typeof SOUND_CARDS==='undefined')return;
   const lib=document.getElementById('cardLib');lib.innerHTML='';
