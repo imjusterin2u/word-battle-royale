@@ -31,8 +31,8 @@ const BUILTIN = {
     '1.4': ['ff','ll','ss','all'],
     // 1.5: Welded sounds AM and AN
     '1.5': ['am','an'],
-    // 1.6: Suffixes -s and -es
-    '1.6': ['s','es'],
+    // 1.6: Suffixes -s and -es (bright yellow — distinct from consonant s)
+    '1.6': ['-s','-es'],
     // ── STEP 2 ──────────────────────────────────────────────────────────
     // 2.1: Welded sounds -ng and -nk families
     '2.1': ['ang','ank','ing','ink','ong','onk','ung','unk'],
@@ -236,7 +236,7 @@ const BUILTIN = {
     'col':'prefix','cor':'prefix','il':'prefix','ir':'prefix',
     'suc':'prefix','suf':'prefix','sup':'prefix','sus':'prefix',
     // ── Suffixes (bright yellow) ──
-    's':'suffix','es':'suffix','ed':'suffix','ing':'suffix',
+    's':'suffix','es':'suffix','-s':'suffix','-es':'suffix','ed':'suffix','ing':'suffix',
     'er':'suffix','est':'suffix','ly':'suffix','en':'suffix','le':'suffix',
     'able':'suffix','ful':'suffix','less':'suffix','ment':'suffix',
     'ness':'suffix','ish':'suffix','or':'suffix','ty':'suffix',
@@ -2081,6 +2081,8 @@ const SOUND_CARDS = [
   { grapheme:'qu', step:'1.2', cat:'consonant', sounds:[{p:'/kw/',k:'queen'}] },
   { grapheme:'r',  step:'1.1', cat:'consonant', sounds:[{p:'/r/',k:'rat'}] },
   { grapheme:'s',  step:'1.1', cat:'consonant', sounds:[{p:'/s/',k:'snake'},{p:'/z/',k:'visit',sub:'3.1'}] },
+  { grapheme:'-s', step:'1.6', cat:'suffix', sounds:[{p:'/s/',k:'cats'},{p:'/z/',k:'dogs',note:'after voiced sounds'}] },
+  { grapheme:'-es',step:'1.6', cat:'suffix', sounds:[{p:'/ĕz/',k:'dishes',note:'after s,z,ch,sh,x sounds'}] },
   { grapheme:'t',  step:'1.1', cat:'consonant', sounds:[{p:'/t/',k:'top'}] },
   { grapheme:'v',  step:'1.2', cat:'consonant', sounds:[{p:'/v/',k:'van'}] },
   { grapheme:'w',  step:'1.2', cat:'consonant', sounds:[{p:'/w/',k:'wind'}] },
