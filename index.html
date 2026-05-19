@@ -146,8 +146,10 @@ select{cursor:pointer;}textarea{resize:vertical;}
     <div class="sf"><label>Word Type</label><select id="wordTypeChart" style="max-width:110px;"><option>Real</option><option>Nonsense</option></select></div>
     <div class="row" style="gap:5px;align-self:flex-end;">
       <button class="btn btn-primary" id="createBtn" type="button">⚔️ Create Lesson</button>
-      <button class="btn btn-outline btn-sm" id="saveProfileBtn" type="button">💾</button>
-      <button class="btn btn-outline btn-sm" id="loadProfileBtn" type="button">📂</button>
+      <button class="btn btn-outline btn-sm" id="savePlanBtn" type="button">💾 Save Plan</button>
+      <button class="btn btn-outline btn-sm" id="loadPlanBtn" type="button">📂 Load Plan</button>
+      <button class="btn btn-outline btn-sm" id="saveProfileBtn" type="button" title="Save Profile">👤</button>
+      <button class="btn btn-outline btn-sm" id="loadProfileBtn" type="button" title="Load Profile">📋</button>
     </div>
   </div>
 
@@ -444,6 +446,77 @@ select{cursor:pointer;}textarea{resize:vertical;}
   </div><!-- /block3 -->
 
 </div><!-- /main -->
+
+<!-- Plan picker modal -->
+<div class="modal-overlay" id="planModal">
+  <div class="modal-box" style="max-width:720px;">
+    <div class="row" style="justify-content:space-between;margin-bottom:14px;">
+      <h2 style="font-family:'Cinzel',serif;color:var(--b1);">Load Lesson Plan</h2>
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('planModal').style.display='none'" type="button">✕</button>
+    </div>
+
+    <!-- Search / filter bar -->
+    <div class="row" style="gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      <div class="col" style="flex:1;min-width:140px;">
+        <label class="fld">Filter by substep</label>
+        <select id="planFilterStep" style="font-size:13px;">
+          <option value="">All substeps</option>
+        </select>
+      </div>
+      <div class="col" style="flex:1;min-width:140px;">
+        <label class="fld">Filter by student</label>
+        <input id="planFilterStudent" placeholder="Student name…" style="font-size:13px;"/>
+      </div>
+      <div class="col" style="flex:1;min-width:140px;">
+        <label class="fld">Show</label>
+        <select id="planFilterType" style="font-size:13px;">
+          <option value="all">All plans</option>
+          <option value="template">Templates only ⭐</option>
+          <option value="lesson">Lessons only</option>
+        </select>
+      </div>
+      <div style="align-self:flex-end;">
+        <button class="btn btn-primary btn-sm" id="planSearchBtn" type="button">🔍 Search</button>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="planResults" style="max-height:420px;overflow-y:auto;">
+      <div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Search to find plans, or select a substep above</div>
+    </div>
+  </div>
+</div>
+
+<!-- Save plan modal -->
+<div class="modal-overlay" id="savePlanModal">
+  <div class="modal-box" style="max-width:440px;">
+    <div class="row" style="justify-content:space-between;margin-bottom:14px;">
+      <h2 style="font-family:'Cinzel',serif;color:var(--b1);">Save Lesson Plan</h2>
+      <button class="btn btn-outline btn-sm" onclick="document.getElementById('savePlanModal').style.display='none'" type="button">✕</button>
+    </div>
+    <div class="col" style="gap:10px;">
+      <div class="col">
+        <label class="fld">Save as</label>
+        <div class="row" style="gap:8px;">
+          <label style="display:flex;align-items:center;gap:5px;font-size:14px;cursor:pointer;">
+            <input type="radio" name="saveType" id="saveAsLesson" value="lesson" checked style="width:auto;"/> Lesson (linked to student)
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:14px;cursor:pointer;">
+            <input type="radio" name="saveType" id="saveAsTemplate" value="template" style="width:auto;"/> ⭐ Template (reusable)
+          </label>
+        </div>
+      </div>
+      <div class="col">
+        <label class="fld">Plan name / notes</label>
+        <input id="savePlanName" placeholder="e.g. Step 2.3 Introduction — standard"/>
+      </div>
+      <div id="saveTemplateNote" style="display:none;background:#fff8e0;border:1px solid #e8d080;border-radius:7px;padding:8px 10px;font-size:12px;color:#7a5a00;">
+        ⭐ Templates are not linked to a specific student — they're reusable base plans you can load and tweak for any student at this substep.
+      </div>
+      <button class="btn btn-primary" id="confirmSavePlanBtn" type="button" style="width:100%;">💾 Save Plan</button>
+    </div>
+  </div>
+</div>
 
 <!-- Summary modal -->
 <div class="modal-overlay" id="summaryModal">
@@ -780,8 +853,293 @@ function addLog(type,msg,logId){
   if(logId){const el=document.getElementById(logId);if(el){const d=document.createElement('div');d.className=`log-entry ${type}`;d.textContent=`${new Date().toLocaleTimeString()} — ${msg}`;el.appendChild(d);el.scrollTop=el.scrollHeight;}}
 }
 
+// ── Plan field map ────────────────────────────────────────
+// Maps field IDs to plan property names
+const PLAN_FIELDS = [
+  'teacherName','studentName','substep','lessonNum','conceptsWeave',
+  'troubleSpots','wordTypeChart',
+  // Block 1
+  'revConcepts','revWords','curConcepts','curWords','notebook1',
+  'wcSubsteps','wcActivity','wcVocab','wcHFW',
+  'wlReader','wlType','wlPractice','wlChart','wlNotes',
+  'srReader','srPage','srText','srNotes',
+  // Block 2
+  'rdV','rdC','rdW','rdE',
+  'spRC','spRW','spCC','spCW','spHFW','spNB',
+  'dSounds','dElements','dReal','dNonsense','dHFW','dSent',
+  // Block 3
+  'pTitle','pSource','pComp','pFluency','pVocab','pQuestions','pNotes',
+  'lrSource','lrPages','lrNotes',
+];
+
+const PLAN_CHECKBOXES = ['tListen','tInteractive','tScaffolded','tOral'];
+const PLAN_SELECTS    = ['wcActivity','wlReader','wlType','srReader','pSource','pComp','pFluency'];
+
+function collectPlanData() {
+  const plan = {};
+  // Lesson type
+  plan.lessonType = S.lessonType;
+  // Review steps
+  plan.reviewSteps = S.reviewSteps;
+  // Text fields
+  PLAN_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) plan[id] = el.value || '';
+  });
+  // Checkboxes
+  PLAN_CHECKBOXES.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) plan[id] = el.checked;
+  });
+  // Word list words
+  plan.wlWordList = wlWords;
+  // Image files (if any — will be uploaded by fbSavePlan)
+  const srImgFile = document.getElementById('srImg').files[0];
+  const pImgFile  = document.getElementById('pImg').files[0];
+  if (srImgFile) plan._srImageFile = srImgFile;
+  if (pImgFile)  plan._pImageFile  = pImgFile;
+  // Existing image URLs (if already uploaded)
+  if (window._srImageUrl) plan.srImageUrl = window._srImageUrl;
+  if (window._pImageUrl)  plan.pImageUrl  = window._pImageUrl;
+  return plan;
+}
+
+function applyPlanData(plan) {
+  // Lesson type
+  if (plan.lessonType) {
+    document.querySelectorAll('.lt-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.lt === plan.lessonType);
+    });
+    S.lessonType = plan.lessonType;
+  }
+  // Text fields
+  PLAN_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && plan[id] !== undefined) el.value = plan[id];
+  });
+  // Checkboxes
+  PLAN_CHECKBOXES.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && plan[id] !== undefined) el.checked = plan[id];
+  });
+  // Review steps
+  if (plan.substep) {
+    populateReviewChecks(plan.substep);
+    if (plan.reviewSteps && plan.reviewSteps.length) {
+      document.querySelectorAll('#reviewChecks .stab').forEach(el => {
+        el.classList.toggle('active', plan.reviewSteps.includes(el.dataset.step));
+      });
+      updateReview();
+    }
+  }
+  // Word list
+  if (plan.wlWordList && plan.wlWordList.length) {
+    wlWords = plan.wlWordList;
+    renderWL();
+  }
+  // Images
+  if (plan.srImageUrl) {
+    window._srImageUrl = plan.srImageUrl;
+    document.getElementById('srImgEl').src = plan.srImageUrl;
+    document.getElementById('srImgPreview').style.display = '';
+  }
+  if (plan.pImageUrl) {
+    window._pImageUrl = plan.pImageUrl;
+    document.getElementById('pImgEl').src = plan.pImageUrl;
+    document.getElementById('pImgPreview').style.display = '';
+  }
+}
+
+// ── Save plan ──────────────────────────────────────────────
+document.getElementById('savePlanBtn').addEventListener('click', () => {
+  if (!S.step) { alert('Create a lesson first before saving.'); return; }
+  // Pre-fill name suggestion
+  document.getElementById('savePlanName').value =
+    `Step ${S.step} ${S.lessonType.charAt(0).toUpperCase()+S.lessonType.slice(1)}${S.student ? ' — ' + S.student : ''}`;
+  document.getElementById('savePlanModal').style.display = 'flex';
+});
+
+// Toggle template note
+document.querySelectorAll('input[name="saveType"]').forEach(r => {
+  r.addEventListener('change', () => {
+    document.getElementById('saveTemplateNote').style.display =
+      document.getElementById('saveAsTemplate').checked ? '' : 'none';
+  });
+});
+
+document.getElementById('confirmSavePlanBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('confirmSavePlanBtn');
+  btn.disabled = true; btn.textContent = '💾 Saving…';
+  try {
+    const plan = collectPlanData();
+    plan.isTemplate = document.getElementById('saveAsTemplate').checked;
+    plan.planName   = document.getElementById('savePlanName').value.trim();
+    plan.student    = plan.isTemplate ? '' : (S.student || '');
+    plan.substep    = S.step;
+    plan.date       = new Date().toISOString().slice(0, 10);
+    plan.starred    = plan.isTemplate;
+
+    if (window.fb) {
+      const id = await window.fb.savePlan(plan);
+      console.log('Plan saved:', id);
+    }
+    document.getElementById('savePlanModal').style.display = 'none';
+    alert(`Plan saved! "${plan.planName}"`);
+  } catch (err) {
+    console.error('Save error:', err);
+    alert('Error saving plan. Check console for details.');
+  } finally {
+    btn.disabled = false; btn.textContent = '💾 Save Plan';
+  }
+});
+
+// ── Load plan picker ───────────────────────────────────────
+// Populate substep filter
+function populatePlanFilter() {
+  const sel = document.getElementById('planFilterStep');
+  Object.keys(BUILTIN.graphemesByStep)
+    .sort((a,b) => parseFloat(a)-parseFloat(b))
+    .forEach(s => {
+      const o = document.createElement('option'); o.value = s; o.textContent = `Step ${s}`; sel.appendChild(o);
+    });
+}
+
+document.getElementById('loadPlanBtn').addEventListener('click', () => {
+  // Pre-fill filter with current step if available
+  if (S.step) document.getElementById('planFilterStep').value = S.step;
+  if (S.student) document.getElementById('planFilterStudent').value = S.student;
+  document.getElementById('planModal').style.display = 'flex';
+  searchPlans();
+});
+
+document.getElementById('planSearchBtn').addEventListener('click', searchPlans);
+
+async function searchPlans() {
+  const resultsEl = document.getElementById('planResults');
+  resultsEl.innerHTML = '<div style="color:var(--muted);text-align:center;padding:16px;">Loading…</div>';
+
+  if (!window.fb) {
+    resultsEl.innerHTML = '<div style="color:var(--muted);text-align:center;padding:16px;">Firebase not connected yet. Create a lesson first.</div>';
+    return;
+  }
+
+  try {
+    const filterStep    = document.getElementById('planFilterStep').value;
+    const filterStudent = document.getElementById('planFilterStudent').value.trim();
+    const filterType    = document.getElementById('planFilterType').value;
+
+    let plans = [];
+
+    if (filterStudent) {
+      plans = await window.fb.getStudentPlans(filterStudent);
+    } else if (filterStep) {
+      plans = await window.fb.getPlansBySubstep(filterStep);
+    } else {
+      plans = await window.fb.getTemplates();
+    }
+
+    // Apply type filter
+    if (filterType === 'template') plans = plans.filter(p => p.isTemplate);
+    if (filterType === 'lesson')   plans = plans.filter(p => !p.isTemplate);
+
+    if (!plans.length) {
+      resultsEl.innerHTML = '<div style="color:var(--muted);text-align:center;padding:20px;">No plans found. Try different filters.</div>';
+      return;
+    }
+
+    renderPlanResults(plans);
+  } catch (err) {
+    console.error('Search error:', err);
+    resultsEl.innerHTML = '<div style="color:var(--danger);text-align:center;padding:16px;">Error loading plans. Check console.</div>';
+  }
+}
+
+function renderPlanResults(plans) {
+  const resultsEl = document.getElementById('planResults');
+  resultsEl.innerHTML = '';
+
+  // Group: templates first, then by date
+  const templates = plans.filter(p => p.isTemplate);
+  const lessons   = plans.filter(p => !p.isTemplate);
+
+  if (templates.length) {
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;padding:6px 0 4px;border-bottom:1px solid var(--border);margin-bottom:6px;';
+    hdr.textContent = '⭐ Templates';
+    resultsEl.appendChild(hdr);
+    templates.forEach(p => resultsEl.appendChild(makePlanRow(p)));
+  }
+
+  if (lessons.length) {
+    const hdr = document.createElement('div');
+    hdr.style.cssText = 'font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;padding:10px 0 4px;border-bottom:1px solid var(--border);margin-bottom:6px;margin-top:6px;';
+    hdr.textContent = 'Recent Lessons';
+    resultsEl.appendChild(hdr);
+    lessons.forEach(p => resultsEl.appendChild(makePlanRow(p)));
+  }
+}
+
+function makePlanRow(plan) {
+  const div = document.createElement('div');
+  div.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 8px;border-bottom:1px solid var(--border);transition:background .12s;border-radius:7px;';
+  div.onmouseenter = () => div.style.background = 'var(--card2)';
+  div.onmouseleave = () => div.style.background = '';
+
+  const date = plan.date || (plan.savedAt?.toDate?.()?.toLocaleDateString() || '—');
+  const ltBadge = plan.lessonType ?
+    `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;background:${plan.lessonType==='introduction'?'#e8f0ff':plan.lessonType==='accuracy'?'#f0e8ff':'#e8f8ee'};color:${plan.lessonType==='introduction'?'var(--b1)':plan.lessonType==='accuracy'?'var(--b2)':'var(--b3)'};">${plan.lessonType}</span>` : '';
+
+  div.innerHTML = `
+    <div style="flex:1;min-width:0;">
+      <div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+        ${plan.isTemplate ? '⭐ ' : ''}${plan.planName || `Step ${plan.substep} — ${plan.student || 'Template'}`}
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <span>📚 Step ${plan.substep || '—'}</span>
+        ${plan.student ? `<span>👤 ${plan.student}</span>` : ''}
+        <span>📅 ${date}</span>
+        ${ltBadge}
+      </div>
+    </div>
+    <div style="display:flex;gap:5px;flex-shrink:0;">
+      <button class="btn btn-outline btn-xs star-btn" data-id="${plan.id}" data-starred="${plan.starred||false}" type="button">${plan.starred ? '⭐' : '☆'}</button>
+      <button class="btn btn-primary btn-sm load-btn" data-id="${plan.id}" type="button">Load</button>
+    </div>`;
+
+  // Star button
+  div.querySelector('.star-btn').addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const btn = e.currentTarget;
+    const starred = btn.dataset.starred === 'true';
+    await window.fb.updatePlan(plan.id, { starred: !starred, isTemplate: !starred });
+    btn.dataset.starred = (!starred).toString();
+    btn.textContent = !starred ? '⭐' : '☆';
+  });
+
+  // Load button
+  div.querySelector('.load-btn').addEventListener('click', async () => {
+    const fullPlan = await window.fb.getPlan(plan.id);
+    if (!fullPlan) { alert('Could not load plan.'); return; }
+    applyPlanData(fullPlan);
+    document.getElementById('planModal').style.display = 'none';
+
+    // Show blocks
+    document.getElementById('scoreBar').style.display = '';
+    document.getElementById('block1').style.display = '';
+    document.getElementById('block2').style.display = '';
+    document.getElementById('block3').style.display = '';
+
+    alert(`Plan loaded: "${fullPlan.planName || 'Lesson Plan'}"
+
+Click Create Lesson when ready to start.`);
+  });
+
+  return div;
+}
+
 // ── Init ───────────────────────────────────────────────
 populateSubsteps();
+populatePlanFilter();
 </script>
 </body>
 </html>
