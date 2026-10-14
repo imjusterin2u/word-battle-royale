@@ -91,37 +91,41 @@ async function fbUpdatePlan(planId, updates) {
   await updateDoc(doc(db, "wbr_plans", planId), updates);
 }
 
+// Newest first. Sorting here instead of in the query avoids
+// Firestore's composite-index requirement.
+function sortBySaved(plans) {
+  const t = p => (p.savedAt && p.savedAt.toMillis) ? p.savedAt.toMillis() : 0;
+  return plans.sort((a, b) => t(b) - t(a));
+}
+
 // Load plans by substep (for picker)
 async function fbGetPlansBySubstep(substep) {
   const q = query(
     collection(db, "wbr_plans"),
-    where("substep", "==", substep),
-    orderBy("savedAt", "desc")
+    where("substep", "==", substep)
   );
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return sortBySaved(snap.docs.map(d => ({ id: d.id, ...d.data() })));
 }
 
 // Load all templates
 async function fbGetTemplates() {
   const q = query(
     collection(db, "wbr_plans"),
-    where("isTemplate", "==", true),
-    orderBy("savedAt", "desc")
+    where("isTemplate", "==", true)
   );
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return sortBySaved(snap.docs.map(d => ({ id: d.id, ...d.data() })));
 }
 
 // Load recent plans for a student
 async function fbGetStudentPlans(studentName) {
   const q = query(
     collection(db, "wbr_plans"),
-    where("student", "==", studentName),
-    orderBy("savedAt", "desc")
+    where("student", "==", studentName)
   );
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  return sortBySaved(snap.docs.map(d => ({ id: d.id, ...d.data() })));
 }
 
 // Load a single plan by ID

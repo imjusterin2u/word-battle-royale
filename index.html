@@ -1046,6 +1046,9 @@ async function searchPlans() {
       plans = await window.fb.getTemplates();
     }
 
+    // Both filters set: narrow student results to the chosen substep too
+    if (filterStudent && filterStep) plans = plans.filter(p => p.substep === filterStep);
+
     // Apply type filter
     if (filterType === 'template') plans = plans.filter(p => p.isTemplate);
     if (filterType === 'lesson')   plans = plans.filter(p => !p.isTemplate);
@@ -1058,7 +1061,7 @@ async function searchPlans() {
     renderPlanResults(plans);
   } catch (err) {
     console.error('Search error:', err);
-    resultsEl.innerHTML = '<div style="color:var(--danger);text-align:center;padding:16px;">Error loading plans. Check console.</div>';
+    resultsEl.innerHTML = '<div style="color:var(--danger);text-align:center;padding:16px;">Error loading plans: ' + (err.code || err.message || 'unknown') + '</div>';
   }
 }
 
