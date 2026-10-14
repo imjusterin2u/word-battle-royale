@@ -2290,6 +2290,7 @@ const SOUND_CARDS = [
   { grapheme:'sub-', step:'3.2', cat:'prefix', sounds:[{p:'sŭb',k:'subway'}] },
   { grapheme:'co-',  step:'5.1', cat:'prefix', sounds:[{p:'kō',k:'cooperate'}] },
   { grapheme:'de-',  step:'5.1', cat:'prefix', sounds:[{p:'dē',k:'decode'}] },
+  { grapheme:'e-',   step:'5.1', cat:'prefix', sounds:[{p:'ē',k:'erupt'}] },
   { grapheme:'pre-', step:'5.1', cat:'prefix', sounds:[{p:'prē',k:'preview'}] },
   { grapheme:'pro-', step:'5.1', cat:'prefix', sounds:[{p:'prō',k:'proceed'}] },
   { grapheme:'re-',  step:'5.1', cat:'prefix', sounds:[{p:'rē',k:'return'}] },
