@@ -530,9 +530,9 @@ select{cursor:pointer;}textarea{resize:vertical;}
   </div>
 </div>
 
-<script src="js/config.js?v=20261014e"></script>
-<script src="js/game.js?v=20261014e"></script>
-<script type="module" src="js/firebase.js?v=20261014e"></script>
+<script src="js/config.js?v=20261014f"></script>
+<script src="js/game.js?v=20261014f"></script>
+<script type="module" src="js/firebase.js?v=20261014f"></script>
 <script>
 // ── State ──────────────────────────────────────────────
 const S = {
@@ -1106,7 +1106,11 @@ function makePlanRow(plan) {
   div.onmouseenter = () => div.style.background = 'var(--card2)';
   div.onmouseleave = () => div.style.background = '';
 
-  const date = plan.date || (plan.savedAt?.toDate?.()?.toLocaleDateString() || '—');
+  // Show date + time so same-day versions can be told apart
+  const saved = plan.savedAt?.toDate?.();
+  const date = saved
+    ? saved.toLocaleDateString() + ' ' + saved.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+    : (plan.date || '—');
   const ltBadge = plan.lessonType ?
     `<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;background:${plan.lessonType==='introduction'?'#e8f0ff':plan.lessonType==='accuracy'?'#f0e8ff':'#e8f8ee'};color:${plan.lessonType==='introduction'?'var(--b1)':plan.lessonType==='accuracy'?'var(--b2)':'var(--b3)'};">${plan.lessonType}</span>` : '';
 
@@ -1125,6 +1129,7 @@ function makePlanRow(plan) {
     <div style="display:flex;gap:5px;flex-shrink:0;">
       <button class="btn btn-outline btn-xs star-btn" data-id="${plan.id}" data-starred="${plan.starred||false}" type="button">${plan.starred ? '⭐' : '☆'}</button>
       <button class="btn btn-primary btn-sm load-btn" data-id="${plan.id}" type="button">Load</button>
+      <button class="btn btn-outline btn-xs del-btn" title="Delete this plan" type="button">🗑️</button>
     </div>`;
 
   // Star button
@@ -1135,6 +1140,20 @@ function makePlanRow(plan) {
     await window.fb.updatePlan(plan.id, { starred: !starred, isTemplate: !starred });
     btn.dataset.starred = (!starred).toString();
     btn.textContent = !starred ? '⭐' : '☆';
+  });
+
+  // Delete button
+  div.querySelector('.del-btn').addEventListener('click', async (e) => {
+    e.stopPropagation();
+    const name = plan.planName || `Step ${plan.substep}`;
+    if (!confirm(`Delete "${name}" (saved ${date})?\n\nThis can't be undone.`)) return;
+    try {
+      await window.fb.deletePlan(plan.id);
+      div.remove();
+    } catch (err) {
+      console.error('Delete error:', err);
+      alert('Could not delete plan: ' + (err.code || err.message));
+    }
   });
 
   // Load button

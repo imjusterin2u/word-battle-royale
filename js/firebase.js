@@ -4,7 +4,7 @@
 // ============================================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, doc, setDoc, getDoc, addDoc, collection, onSnapshot, updateDoc, arrayUnion, serverTimestamp, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, addDoc, collection, onSnapshot, updateDoc, deleteDoc, arrayUnion, serverTimestamp, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
@@ -128,6 +128,11 @@ async function fbGetStudentPlans(studentName) {
   return sortBySaved(snap.docs.map(d => ({ id: d.id, ...d.data() })));
 }
 
+// Delete a plan permanently
+async function fbDeletePlan(planId) {
+  await deleteDoc(doc(db, "wbr_plans", planId));
+}
+
 // Load a single plan by ID
 async function fbGetPlan(planId) {
   const snap = await getDoc(doc(db, "wbr_plans", planId));
@@ -156,6 +161,7 @@ window.fb = {
   getTemplates:     fbGetTemplates,
   getStudentPlans:  fbGetStudentPlans,
   getPlan:          fbGetPlan,
+  deletePlan:       fbDeletePlan,
   uploadImage:      fbUploadImage,
 };
 
