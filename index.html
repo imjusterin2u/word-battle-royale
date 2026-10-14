@@ -530,9 +530,9 @@ select{cursor:pointer;}textarea{resize:vertical;}
   </div>
 </div>
 
-<script src="js/config.js?v=20261014b"></script>
-<script src="js/game.js?v=20261014b"></script>
-<script type="module" src="js/firebase.js?v=20261014b"></script>
+<script src="js/config.js?v=20261014c"></script>
+<script src="js/game.js?v=20261014c"></script>
+<script type="module" src="js/firebase.js?v=20261014c"></script>
 <script>
 // ── State ──────────────────────────────────────────────
 const S = {
@@ -901,6 +901,8 @@ function collectPlanData() {
   });
   // Word list words
   plan.wlWordList = wlWords;
+  // Sound-card deck (just grapheme + step; rebuilt from SOUND_CARDS on load)
+  plan.drillDeck = DRILL.deck.map(c => ({ grapheme: c.grapheme, step: c.step }));
   // Image files (if any — will be uploaded by fbSavePlan)
   const srImgFile = document.getElementById('srImg').files[0];
   const pImgFile  = document.getElementById('pImg').files[0];
@@ -945,6 +947,14 @@ function applyPlanData(plan) {
     wlWords = plan.wlWordList;
     renderWL();
   }
+  // Sound-card library + saved deck
+  if (plan.substep) S.step = plan.substep;
+  if (plan.student) S.student = plan.student;
+  DRILL.deck = (plan.drillDeck || [])
+    .map(d => SOUND_CARDS.find(c => c.grapheme === d.grapheme && c.step === d.step))
+    .filter(Boolean);
+  document.getElementById('deckBadge').textContent = DRILL.deck.length;
+  buildCardLib();
   // Images
   if (plan.srImageUrl) {
     window._srImageUrl = plan.srImageUrl;
