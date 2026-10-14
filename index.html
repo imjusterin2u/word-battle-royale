@@ -495,6 +495,14 @@ select{cursor:pointer;}textarea{resize:vertical;}
       <button class="btn btn-outline btn-sm" onclick="document.getElementById('savePlanModal').style.display='none'" type="button">✕</button>
     </div>
     <div class="col" style="gap:10px;">
+      <div class="col" id="saveModeRow" style="display:none;background:#eef4ff;border:1px solid #c8d8f5;border-radius:7px;padding:8px 10px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;">
+          <input type="radio" name="saveMode" id="saveModeUpdate" value="update" checked style="width:auto;"/> 🔄 Update <strong id="saveModeName"></strong>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:14px;cursor:pointer;margin-top:4px;">
+          <input type="radio" name="saveMode" id="saveModeNew" value="new" style="width:auto;"/> ➕ Save as a new plan
+        </label>
+      </div>
       <div class="col">
         <label class="fld">Save as</label>
         <div class="row" style="gap:8px;">
@@ -530,9 +538,9 @@ select{cursor:pointer;}textarea{resize:vertical;}
   </div>
 </div>
 
-<script src="js/config.js?v=20261014f"></script>
-<script src="js/game.js?v=20261014f"></script>
-<script type="module" src="js/firebase.js?v=20261014f"></script>
+<script src="js/config.js?v=20261014g"></script>
+<script src="js/game.js?v=20261014g"></script>
+<script type="module" src="js/firebase.js?v=20261014g"></script>
 <script>
 // ── State ──────────────────────────────────────────────
 const S = {
@@ -974,6 +982,16 @@ document.getElementById('savePlanBtn').addEventListener('click', () => {
   // Pre-fill name suggestion
   document.getElementById('savePlanName').value =
     `Step ${S.step} ${S.lessonType.charAt(0).toUpperCase()+S.lessonType.slice(1)}${S.student ? ' — ' + S.student : ''}`;
+  // A plan was loaded: offer to update it instead of making a copy
+  const lp = window._loadedPlan;
+  document.getElementById('saveModeRow').style.display = lp ? '' : 'none';
+  if (lp) {
+    document.getElementById('saveModeName').textContent = `"${lp.name}"`;
+    document.getElementById('saveModeUpdate').checked = true;
+    document.getElementById('savePlanName').value = lp.name;
+    document.getElementById(lp.isTemplate ? 'saveAsTemplate' : 'saveAsLesson').checked = true;
+    document.getElementById('saveTemplateNote').style.display = lp.isTemplate ? '' : 'none';
+  }
   document.getElementById('savePlanModal').style.display = 'flex';
 });
 
@@ -997,12 +1015,15 @@ document.getElementById('confirmSavePlanBtn').addEventListener('click', async ()
     plan.date       = new Date().toISOString().slice(0, 10);
     plan.starred    = plan.isTemplate;
 
+    const updating = window._loadedPlan && document.getElementById('saveModeUpdate').checked;
     if (window.fb) {
-      const id = await window.fb.savePlan(plan);
-      console.log('Plan saved:', id);
+      const id = await window.fb.savePlan(plan, updating ? window._loadedPlan.id : null);
+      console.log(updating ? 'Plan updated:' : 'Plan saved:', id);
+      // Later saves update this plan by default
+      window._loadedPlan = { id, name: plan.planName, isTemplate: plan.isTemplate };
     }
     document.getElementById('savePlanModal').style.display = 'none';
-    alert(`Plan saved! "${plan.planName}"`);
+    alert(updating ? `Plan updated! "${plan.planName}"` : `Plan saved! "${plan.planName}"`);
   } catch (err) {
     console.error('Save error:', err);
     alert('Error saving plan. Check console for details.');
@@ -1149,6 +1170,7 @@ function makePlanRow(plan) {
     if (!confirm(`Delete "${name}" (saved ${date})?\n\nThis can't be undone.`)) return;
     try {
       await window.fb.deletePlan(plan.id);
+      if (window._loadedPlan && window._loadedPlan.id === plan.id) window._loadedPlan = null;
       div.remove();
     } catch (err) {
       console.error('Delete error:', err);
@@ -1161,6 +1183,7 @@ function makePlanRow(plan) {
     const fullPlan = await window.fb.getPlan(plan.id);
     if (!fullPlan) { alert('Could not load plan.'); return; }
     applyPlanData(fullPlan);
+    window._loadedPlan = { id: fullPlan.id, name: fullPlan.planName || `Step ${fullPlan.substep}`, isTemplate: !!fullPlan.isTemplate };
     document.getElementById('planModal').style.display = 'none';
 
     // Show blocks

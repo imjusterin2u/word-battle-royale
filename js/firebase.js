@@ -66,7 +66,7 @@ async function fbGetProfile(studentName) {
 // ── Lesson Plans ──────────────────────────────────────────
 
 // Save a plan (lesson or template)
-async function fbSavePlan(planData) {
+async function fbSavePlan(planData, existingId) {
   // Upload any images first
   if (planData._srImageFile) {
     const path = `lesson-images/${Date.now()}_sr_${planData._srImageFile.name}`;
@@ -79,6 +79,14 @@ async function fbSavePlan(planData) {
     delete planData._pImageFile;
   }
 
+  // Update in place when an existing plan id is given, otherwise create new
+  if (existingId) {
+    await setDoc(doc(db, "wbr_plans", existingId), {
+      ...planData,
+      savedAt: serverTimestamp(),
+    });
+    return existingId;
+  }
   const docRef = await addDoc(collection(db, "wbr_plans"), {
     ...planData,
     savedAt: serverTimestamp(),
