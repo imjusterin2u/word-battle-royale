@@ -136,6 +136,20 @@ async function fbGetStudentPlans(studentName) {
   return sortBySaved(snap.docs.map(d => ({ id: d.id, ...d.data() })));
 }
 
+// ── Battle rooms ──────────────────────────────────────────
+// Create a battle room with a 4-character code. Returns false if
+// that code is already in use by a recent room.
+async function fbCreateBattle(code, data) {
+  const r = doc(db, "wbr_rooms", code);
+  const snap = await getDoc(r);
+  if (snap.exists()) {
+    const age = Date.now() - (snap.data().createdMs || 0);
+    if (age < 12 * 3600 * 1000) return false;
+  }
+  await setDoc(r, JSON.parse(JSON.stringify(data)));
+  return true;
+}
+
 // Delete a plan permanently
 async function fbDeletePlan(planId) {
   await deleteDoc(doc(db, "wbr_plans", planId));
@@ -170,6 +184,7 @@ window.fb = {
   getStudentPlans:  fbGetStudentPlans,
   getPlan:          fbGetPlan,
   deletePlan:       fbDeletePlan,
+  createBattle:     fbCreateBattle,
   uploadImage:      fbUploadImage,
 };
 

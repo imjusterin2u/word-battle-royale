@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Word Battle Royale — Battle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b1220; --bg2:#111a2e; --panel:#152038; --panel2:#1b2946; --line:#2a3b60;
+  --text:#e8eefb; --muted:#8fa2c7; --gold:#f0c040; --gold2:#d9a520;
+  --p1:#4aa3ff; --p2:#ff6b5a; --ok:#3ecf7a; --bad:#ff5d5d; --speed:#ffd23f;
+  /* Wilson tile colours (match the teacher console) */
+  --tc-bg:#fff8d0;--tc-txt:#5a4a00;--tc-bdr:#d4b800;
+  --tv-bg:#ffd0d8;--tv-txt:#6a0020;--tv-bdr:#e07090;
+  --tw-bg:#d0f0d0;--tw-txt:#0a4a0a;--tw-bdr:#50a050;
+  --tp-bg:#ffee00;--tp-txt:#3a3000;--tp-bdr:#c0a000;
+  --tl-bg:#f5f5f5;--tl-txt:#2a2a2a;--tl-bdr:#aaa;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:var(--bg);}
+body{color:var(--text);font-family:'Rajdhani',system-ui,sans-serif;font-size:17px;line-height:1.4;min-height:100vh;
+  background:radial-gradient(ellipse at top,#1a2a4d 0%,var(--bg) 60%) fixed;-webkit-tap-highlight-color:transparent;}
+button{font-family:inherit;cursor:pointer;border:none;}
+input{font-family:inherit;}
+.hidden{display:none !important;}
+
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-bottom:1px solid var(--line);background:rgba(11,18,32,.85);position:sticky;top:0;z-index:20;backdrop-filter:blur(6px);}
+.logo{font-family:'Cinzel',serif;font-weight:900;color:var(--gold);font-size:18px;letter-spacing:.04em;white-space:nowrap;}
+.hdr-mid{font-family:'Cinzel',serif;font-weight:700;font-size:16px;color:var(--text);}
+.pill{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-weight:700;font-size:14px;color:var(--muted);white-space:nowrap;}
+.pill b{color:var(--gold);letter-spacing:.12em;}
+
+main{max-width:980px;margin:0 auto;padding:16px;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.25);}
+h1,h2{font-family:'Cinzel',serif;}
+h1{font-size:28px;color:var(--gold);}
+h2{font-size:20px;}
+.muted{color:var(--muted);}
+.center{text-align:center;}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.col{display:flex;flex-direction:column;gap:8px;}
+
+.btn{padding:12px 20px;border-radius:12px;font-weight:700;font-size:17px;background:var(--panel2);color:var(--text);border:1px solid var(--line);transition:transform .06s,filter .15s;}
+.btn:active{transform:scale(.97);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn-gold{background:linear-gradient(180deg,var(--gold),var(--gold2));color:#2a1d00;border-color:#b98a10;}
+.btn-ok{background:linear-gradient(180deg,#46d989,#27a85e);color:#032313;border-color:#1f8a4c;}
+.btn-sm{padding:7px 12px;font-size:14px;border-radius:9px;}
+.btn-ghost{background:transparent;}
+.field{width:100%;padding:13px 14px;border-radius:12px;border:2px solid var(--line);background:#0d1628;color:var(--text);font-size:20px;font-weight:600;}
+.field:focus{outline:none;border-color:var(--gold);}
+.code-field{text-transform:uppercase;letter-spacing:.35em;text-align:center;font-family:'Cinzel',serif;font-size:30px;}
+label.lbl{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
+.err{color:var(--bad);font-weight:700;min-height:22px;}
+
+/* Join + lobby */
+.narrow{max-width:460px;margin:30px auto;}
+.big-code{font-family:'Cinzel',serif;font-size:64px;font-weight:900;letter-spacing:.2em;color:var(--gold);text-shadow:0 0 30px rgba(240,192,64,.35);}
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;}
+.slot{border:2px dashed var(--line);border-radius:14px;padding:16px;min-height:96px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;text-align:center;}
+.slot.filled{border-style:solid;background:var(--panel2);}
+.slot.s1.filled{border-color:var(--p1);}
+.slot.s2.filled{border-color:var(--p2);}
+.slot .nm{font-weight:700;font-size:20px;}
+.tag{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:#0d1628;color:var(--muted);}
+.tag.you{background:var(--gold);color:#2a1d00;}
+
+/* Scoreboard */
+.board{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:stretch;}
+.pcard{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:10px 14px;}
+.pcard.p1{border-color:var(--p1);} .pcard.p2{border-color:var(--p2);}
+.pcard.me{box-shadow:0 0 0 3px rgba(240,192,64,.35);}
+.pname{font-weight:700;font-size:18px;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.stats{display:flex;gap:12px;margin-top:4px;font-weight:700;font-size:16px;flex-wrap:wrap;}
+.stats span{white-space:nowrap;}
+.vs{font-family:'Cinzel',serif;font-weight:900;color:var(--gold);font-size:22px;align-self:center;}
+.armybar{display:flex;height:14px;border-radius:999px;overflow:hidden;margin:10px 0 4px;border:1px solid var(--line);}
+.armybar div{transition:width .6s ease;}
+#ab1{background:linear-gradient(90deg,#2b7bd6,var(--p1));}
+#ab2{background:linear-gradient(90deg,var(--p2),#d6402e);}
+.armylbl{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-weight:700;}
+
+.banner{margin:12px 0 0;border-radius:12px;padding:8px 14px;font-weight:700;text-align:center;font-size:18px;letter-spacing:.03em;}
+.banner.speed{background:rgba(255,210,63,.15);border:1px solid var(--speed);color:var(--speed);animation:pulse 1.2s infinite;}
+.banner.attack{background:rgba(255,93,93,.15);border:1px solid var(--bad);color:#ff9a9a;animation:pulse 1s infinite;}
+@keyframes pulse{50%{filter:brightness(1.35);}}
+
+/* Stage */
+.stage{margin-top:12px;}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;}
+.qtype{font-family:'Cinzel',serif;font-weight:700;color:var(--gold);font-size:16px;letter-spacing:.05em;}
+.timer{height:10px;background:#0d1628;border-radius:999px;overflow:hidden;margin-bottom:16px;}
+.timer div{height:100%;background:linear-gradient(90deg,var(--ok),var(--gold));transition:width .25s linear;}
+.timer.low div{background:var(--bad);}
+.secs{font-weight:700;font-size:18px;min-width:44px;text-align:right;}
+.qprompt{font-size:24px;font-weight:700;text-align:center;margin:6px 0 14px;}
+.qbig{font-family:'Cinzel',serif;font-size:42px;color:var(--gold);text-align:center;margin:4px 0 14px;word-break:break-word;}
+.listen{display:flex;justify-content:center;margin-bottom:14px;}
+.listen .btn{font-size:20px;padding:14px 26px;}
+
+.slotsrow{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;min-height:70px;padding:10px;border-radius:14px;background:#0d1628;border:2px dashed var(--line);margin-bottom:14px;}
+.tray{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;min-height:62px;}
+.tile{min-width:56px;height:58px;padding:0 12px;border-radius:10px;font-size:26px;font-weight:700;border:3px solid;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.35);user-select:none;}
+.tile:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.35);}
+.tile.ph{background:transparent;border:3px dashed var(--line);box-shadow:none;min-width:50px;}
+.tile.consonant{background:var(--tc-bg);color:var(--tc-txt);border-color:var(--tc-bdr);}
+.tile.vowel{background:var(--tv-bg);color:var(--tv-txt);border-color:var(--tv-bdr);}
+.tile.welded{background:var(--tw-bg);color:var(--tw-txt);border-color:var(--tw-bdr);}
+.tile.prefix,.tile.suffix{background:var(--tp-bg);color:var(--tp-txt);border-color:var(--tp-bdr);}
+.tile.latin,.tile.greek{background:var(--tl-bg);color:var(--tl-txt);border-color:var(--tl-bdr);}
+.tile.used{visibility:hidden;}
+.tile.card{min-width:120px;height:110px;font-size:52px;}
+
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.opt{padding:18px 12px;border-radius:14px;font-size:22px;font-weight:700;background:var(--panel2);color:var(--text);border:2px solid var(--line);}
+.opt:active{border-color:var(--gold);}
+.actions{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;}
+
+.locked{text-align:center;padding:28px 10px;}
+.locked .big{font-size:44px;}
+.locked .msg{font-size:24px;font-weight:700;margin-top:6px;}
+.locked.ok .msg{color:var(--ok);} .locked.bad .msg{color:var(--bad);}
+
+/* Results */
+.res-answer{text-align:center;font-size:20px;margin-bottom:12px;}
+.res-answer b{font-family:'Cinzel',serif;color:var(--gold);font-size:28px;}
+.res-players{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.res-p{background:var(--panel2);border-radius:12px;padding:10px 12px;border-left:5px solid var(--line);}
+.res-p.ok{border-left-color:var(--ok);} .res-p.bad{border-left-color:var(--bad);}
+.res-p .given{font-size:15px;color:var(--muted);word-break:break-word;}
+.lines{list-style:none;display:flex;flex-direction:column;gap:4px;margin-bottom:14px;font-weight:600;}
+.lines li{background:#0d1628;border-radius:8px;padding:6px 10px;}
+.shop{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0 14px;}
+.shop .btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 8px;}
+.shop .btn small{font-size:13px;color:inherit;opacity:.8;font-weight:600;}
+.shop .attack{background:linear-gradient(180deg,#7a2430,#561520);border-color:#a0303f;}
+.shopmsg{text-align:center;font-weight:700;min-height:22px;color:var(--gold);}
+
+/* Host bar + spectator */
+.hostbar{margin-top:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 14px;border-radius:12px;background:#0d1628;border:1px dashed var(--line);font-size:15px;}
+.spec-status{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+.spec-status div{background:var(--panel2);border-radius:10px;padding:10px;text-align:center;font-weight:700;}
+
+/* End */
+.trophy{font-size:80px;text-align:center;}
+.review{margin-top:10px;}
+.review li{list-style:none;padding:6px 10px;border-radius:8px;background:#0d1628;margin-bottom:4px;font-weight:600;}
+.review li span{color:var(--muted);font-weight:500;}
+.end-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--gold);color:var(--text);padding:10px 18px;border-radius:12px;font-weight:700;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.4);}
+
+@media (max-width:640px){
+  .logo{font-size:15px;} .hdr-mid{font-size:14px;}
+  .board{grid-template-columns:1fr 1fr;} .vs{display:none;}
+  .stats{font-size:14px;gap:8px;}
+  .opts,.res-players,.end-grid,.spec-status{grid-template-columns:1fr;}
+  .shop{grid-template-columns:1fr;}
+  .big-code{font-size:48px;}
+  .tile{min-width:48px;height:52px;font-size:22px;}
+  .qbig{font-size:34px;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">⚔️ Word Battle Royale</div>
+  <div class="hdr-mid" id="hdrRound"></div>
+  <div class="pill" id="hdrCode">Room <b>——</b></div>
+</header>
+
+<main>
+  <!-- Loading / error -->
+  <section id="scrLoading" class="card narrow center">
+    <h2>Loading battle…</h2>
+    <p class="muted" id="loadMsg" style="margin-top:8px;"></p>
+  </section>
+
+  <!-- Join -->
+  <section id="scrJoin" class="card narrow hidden">
+    <h1 class="center">Join the Battle</h1>
+    <p class="muted center" style="margin:6px 0 18px;">Enter the room code from your teacher's screen.</p>
+    <div class="col">
+      <label class="lbl" for="joinCode">Room code</label>
+      <input id="joinCode" class="field code-field" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false"/>
+      <label class="lbl" for="joinName" style="margin-top:8px;">Your name</label>
+      <input id="joinName" class="field" maxlength="20" autocomplete="off" spellcheck="false"/>
+      <div class="err" id="joinErr"></div>
+      <button class="btn btn-gold" id="joinBtn" type="button">⚔️ Join</button>
+    </div>
+  </section>
+
+  <!-- Lobby -->
+  <section id="scrLobby" class="card hidden">
+    <div class="center">
+      <p class="muted" id="lobbyHint"></p>
+      <div class="big-code" id="lobbyCode">——</div>
+      <p class="muted" id="lobbyUrl" style="margin-top:4px;"></p>
+      <p class="muted" id="lobbyLesson" style="margin-top:6px;"></p>
+    </div>
+    <div class="slots">
+      <div class="slot s1" id="slot1"></div>
+      <div class="slot s2" id="slot2"></div>
+    </div>
+    <div id="lobbyHost" class="col hidden">
+      <div class="row" style="justify-content:center;">
+        <button class="btn" id="hostJoinBtn" type="button">🙋 I'll play too</button>
+        <button class="btn" id="addBotBtn" type="button">🤖 Add BOT</button>
+        <select id="botLevel" class="btn btn-sm" aria-label="BOT difficulty">
+          <option value="0.55">BOT: Easy</option>
+          <option value="0.7" selected>BOT: Medium</option>
+          <option value="0.85">BOT: Hard</option>
+        </select>
+      </div>
+      <div class="row" style="justify-content:center;margin-top:8px;">
+        <button class="btn btn-ok" id="startBtn" type="button" disabled>▶ Start Battle</button>
+      </div>
+    </div>
+    <p class="center muted hidden" id="lobbyWait" style="margin-top:6px;font-size:20px;">⏳ Waiting for the teacher to start the battle…</p>
+  </section>
+
+  <!-- Game -->
+  <section id="scrGame" class="hidden">
+    <div class="board">
+      <div class="pcard p1" id="pc1"></div>
+      <div class="vs">VS</div>
+      <div class="pcard p2" id="pc2"></div>
+    </div>
+    <div class="armybar"><div id="ab1" style="width:50%"></div><div id="ab2" style="width:50%"></div></div>
+    <div class="armylbl"><span id="al1"></span><span>⚔️ ARMY STRENGTH ⚔️</span><span id="al2"></span></div>
+    <div id="banner" class="banner hidden"></div>
+    <div class="stage card" id="stage"></div>
+    <div class="hostbar hidden" id="hostbar"></div>
+  </section>
+
+  <!-- End -->
+  <section id="scrEnd" class="card hidden"></section>
+</main>
+
+<div class="toast hidden" id="toast"></div>
+
+<script src="js/config.js?v=20261015a"></script>
+<script src="js/battle-core.js?v=20261015a"></script>
+<script type="module">
+const B = window.WBRBattle;
+const { ECON, TIMING } = B;
+
+// ── Settings from the URL ─────────────────────────────────────
+const params  = new URLSearchParams(location.search);
+const LOCAL   = params.get('local') === '1';     // test mode: rooms live in this browser only
+const IS_HOST = params.get('host') === '1';
+let CODE = (params.get('room') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAJQuEIqEloRkG2fxduWkzOwU2iIenpX90",
+  authDomain: "wordbattleroyale-76f13.firebaseapp.com",
+  projectId: "wordbattleroyale-76f13",
+  storageBucket: "wordbattleroyale-76f13.firebasestorage.app",
+  messagingSenderId: "709168255102",
+  appId: "1:709168255102:web:e4224baa5038eb39eb882f"
+};
+
+// ── Tiny helpers ──────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const show = id => ['scrLoading','scrJoin','scrLobby','scrGame','scrEnd'].forEach(s => $(s).classList.toggle('hidden', s !== id));
+const SLOTS = ['p1', 'p2'];
+const other = s => s === 'p1' ? 'p2' : 'p1';
+function store_get(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
+function store_set(k, v) { try { sessionStorage.setItem(k, v); } catch (e) {} }
+let clientId = store_get('wbr_client');
+if (!clientId) { clientId = Math.random().toString(36).slice(2, 12); store_set('wbr_client', clientId); }
+
+let toastTimer = null;
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.classList.remove('hidden');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hidden'), 2600);
+}
+
+// Speech: prefer a natural US voice (Samantha on Apple devices)
+let voice = null;
+function pickVoice() {
+  const vs = (window.speechSynthesis && speechSynthesis.getVoices()) || [];
+  voice = vs.find(v => /samantha/i.test(v.name)) || vs.find(v => v.lang === 'en-US') || vs.find(v => /^en/.test(v.lang)) || null;
+}
+if (window.speechSynthesis) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function speak(text) {
+  if (!window.speechSynthesis || !text) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.8; u.lang = 'en-US'; if (voice) u.voice = voice;
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+// iPads only allow speech after a tap, so unlock it on the first tap
+document.addEventListener('pointerdown', function unlock() {
+  speak(' '); document.removeEventListener('pointerdown', unlock);
+}, { once: true });
+
+// ── Data layer: Firestore, or this browser only in test mode ──
+const op = { inc: n => ({ __op: 'inc', n }), union: v => ({ __op: 'union', v }), del: () => ({ __op: 'del' }) };
+
+async function firestoreStore() {
+  const appMod = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+  const fs = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+  const db = fs.getFirestore(appMod.initializeApp(firebaseConfig));
+  const ref = c => fs.doc(db, 'wbr_rooms', c);
+  const conv = patch => {
+    const o = {};
+    for (const [k, v] of Object.entries(patch)) {
+      o[k] = v && v.__op === 'inc' ? fs.increment(v.n)
+           : v && v.__op === 'union' ? fs.arrayUnion(v.v)
+           : v && v.__op === 'del' ? fs.deleteField()
+           : (v === undefined ? null : JSON.parse(JSON.stringify(v)));
+    }
+    return o;
+  };
+  return {
+    async get(c) { const s = await fs.getDoc(ref(c)); return s.exists() ? s.data() : null; },
+    async update(c, p) { await fs.updateDoc(ref(c), conv(p)); },
+    watch(c, cb, onErr) { return fs.onSnapshot(ref(c), s => cb(s.exists() ? s.data() : null), onErr); },
+    async txn(c, fn) {
+      return fs.runTransaction(db, async tx => {
+        const s = await tx.get(ref(c));
+        const r = fn(s.exists() ? s.data() : null);
+        if (r && r.patch) tx.update(ref(c), conv(r.patch));
+        return r ? r.result : null;
+      });
+    },
+  };
+}
+
+function localStore() {
+  const key = c => 'wbrlocal_' + c;
+  const subs = {};
+  const read = c => { try { return JSON.parse(localStorage.getItem(key(c)) || 'null'); } catch (e) { return null; } };
+  const notify = c => setTimeout(() => (subs[c] || []).forEach(f => f(read(c))), 0);
+  const write = (c, d) => { localStorage.setItem(key(c), JSON.stringify(d)); notify(c); };
+  window.addEventListener('storage', e => { if (e.key && e.key.startsWith('wbrlocal_')) notify(e.key.slice(9)); });
+  const apply = (d, patch) => {
+    for (const [k, v] of Object.entries(patch)) {
+      const parts = k.split('.'); let o = d;
+      for (let i = 0; i < parts.length - 1; i++) {
+        if (typeof o[parts[i]] !== 'object' || o[parts[i]] === null) o[parts[i]] = {};
+        o = o[parts[i]];
+      }
+      const last = parts[parts.length - 1];
+      if (v && v.__op === 'inc') o[last] = (o[last] || 0) + v.n;
+      else if (v && v.__op === 'union') { if (!Array.isArray(o[last])) o[last] = []; o[last].push(v.v); }
+      else if (v && v.__op === 'del') delete o[last];
+      else o[last] = JSON.parse(JSON.stringify(v));
+    }
+    return d;
+  };
+  return {
+    async get(c) { return read(c); },
+    async update(c, p) { const d = read(c); if (!d) throw new Error('not-found'); write(c, apply(d, p)); },
+    watch(c, cb) { (subs[c] = subs[c] || []).push(cb); notify(c); return () => { subs[c] = subs[c].filter(f => f !== cb); }; },
+    async txn(c, fn) { const d = read(c); const r = fn(d); if (r && r.patch) write(c, apply(d, r.patch)); return r ? r.result : null; },
+  };
+}
+
+let store = null;
+let room = null;          // latest room document
+let mySlot = null;        // 'p1' | 'p2' when this device is a player
+let unwatch = null;
+
+const freshStats = () => ({ pts: 0, coins: ECON.startCoins, army: ECON.startArmy, correct: 0, wrong: 0, log: [] });
+
+// ── Boot ───────────────────────────────────────────────────────
+(async function boot() {
+  try {
+    store = LOCAL ? localStore() : await firestoreStore();
+  } catch (e) {
+    $('loadMsg').textContent = 'Could not reach the game server. Check the internet connection and refresh.';
+    return;
+  }
+  if (!CODE) { openJoin(); return; }
+  connect(CODE);
+})();
+
+function connect(code) {
+  CODE = code;
+  $('hdrCode').innerHTML = `Room <b>${esc(code)}</b>`;
+  if (unwatch) unwatch();
+  unwatch = store.watch(code, data => {
+    room = data;
+    if (!room) {
+      show('scrLoading');
+      $('loadMsg').textContent = `No battle found with code ${code}. Check the code and try again.`;
+      if (!IS_HOST) setTimeout(openJoin, 1800);
+      return;
+    }
+    mySlot = SLOTS.find(s => room.players && room.players[s] && room.players[s].clientId === clientId) || null;
+    render();
+    if (IS_HOST) hostTick();
+  }, err => {
+    show('scrLoading');
+    $('loadMsg').textContent = 'Lost connection to the game: ' + (err.code || err.message);
+  });
+}
+
+// ── Join ───────────────────────────────────────────────────────
+function openJoin(msg) {
+  show('scrJoin');
+  $('joinCode').value = CODE || '';
+  $('joinErr').textContent = msg || '';
+  setTimeout(() => (CODE ? $('joinName') : $('joinCode')).focus(), 50);
+}
+$('joinCode').addEventListener('input', e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4); });
+$('joinName').addEventListener('keydown', e => { if (e.key === 'Enter') $('joinBtn').click(); });
+$('joinBtn').addEventListener('click', async () => {
+  const code = $('joinCode').value.trim().toUpperCase();
+  const name = $('joinName').value.trim().slice(0, 20);
+  if (code.length !== 4) { $('joinErr').textContent = 'Room codes are 4 letters/numbers.'; return; }
+  if (!name) { $('joinErr').textContent = 'Type your name first.'; return; }
+  $('joinBtn').disabled = true;
+  try {
+    const slot = await claimSlot(code, { name, kind: 'human', clientId });
+    if (!slot) { $('joinErr').textContent = 'That battle is full or already started.'; return; }
+    if (code !== CODE) connect(code);
+  } catch (e) {
+    $('joinErr').textContent = (e.message === 'not-found') ? 'No battle with that code.' : 'Could not join: ' + (e.code || e.message);
+  } finally { $('joinBtn').disabled = false; }
+});
+
+// Put a player into the first free slot (transaction so two devices can't grab the same one)
+async function claimSlot(code, who) {
+  return store.txn(code, data => {
+    if (!data) throw new Error('not-found');
+    const players = data.players || {};
+    const already = SLOTS.find(s => players[s] && players[s].clientId === who.clientId && who.kind === 'human');
+    if (already) return { result: already };
+    if (data.status !== 'lobby') return { result: null };
+    const free = SLOTS.find(s => !players[s]);
+    if (!free) return { result: null };
+    return { result: free, patch: { ['players.' + free]: { ...who, ...freshStats() } } };
+  });
+}
+
+// ── Render ────────────────────────────────────────────────────
+function render() {
+  if (room.status === 'lobby') return renderLobby();
+  if (room.status === 'playing') return renderGame();
+  if (room.status === 'done') return renderEnd();
+}
+
+function lessonLine() {
+  const L = room.lesson || {};
+  return `Step ${esc(L.step || '—')}` + (L.reviewSteps && L.reviewSteps.length ? ` · review ${esc(L.reviewSteps.join(', '))}` : '');
+}
+
+function renderLobby() {
+  if (!IS_HOST && !mySlot) { openJoin(); return; }
+  show('scrLobby');
+  $('hdrRound').textContent = 'Lobby';
+  const url = location.origin + location.pathname;
+  $('lobbyCode').textContent = CODE;
+  $('lobbyHint').textContent = IS_HOST ? 'Room code' : 'You\'re in! Room code';
+  $('lobbyUrl').innerHTML = IS_HOST ? `Student device: go to <b>${esc(url.replace(/^https?:\/\//, ''))}</b> and enter the code` : '';
+  $('lobbyLesson').innerHTML = lessonLine();
+  SLOTS.forEach((s, i) => {
+    const p = room.players && room.players[s];
+    const el = $('slot' + (i + 1));
+    el.classList.toggle('filled', !!p);
+    if (!p) { el.innerHTML = `<div class="muted">Player ${i + 1}</div><div class="muted" style="font-size:14px;">waiting to join…</div>`; return; }
+    const tags = [p.kind === 'bot' ? '<span class="tag">BOT</span>' : '', s === mySlot ? '<span class="tag you">YOU</span>' : ''].join(' ');
+    el.innerHTML = `<div class="nm">${p.kind === 'bot' ? '🤖 ' : '🛡️ '}${esc(p.name)}</div><div>${tags}</div>` +
+      (IS_HOST ? `<button class="btn btn-sm btn-ghost" data-kick="${s}" type="button">✕ Remove</button>` : '');
+  });
+  document.querySelectorAll('[data-kick]').forEach(b => b.onclick = () => store.update(CODE, { ['players.' + b.dataset.kick]: op.del() }));
+  $('lobbyHost').classList.toggle('hidden', !IS_HOST);
+  $('lobbyWait').classList.toggle('hidden', IS_HOST);
+  const count = SLOTS.filter(s => room.players && room.players[s]).length;
+  $('startBtn').disabled = count < 2;
+  $('hostJoinBtn').disabled = !!mySlot || count >= 2;
+  $('addBotBtn').disabled = count >= 2;
+}
+
+$('hostJoinBtn').addEventListener('click', async () => {
+  const name = (room.lesson && room.lesson.teacher) || 'Teacher';
+  await claimSlot(CODE, { name, kind: 'human', clientId });
+});
+$('addBotBtn').addEventListener('click', async () => {
+  const acc = parseFloat($('botLevel').value) || 0.7;
+  const name = B.BOT_NAMES[Math.floor(Math.random() * B.BOT_NAMES.length)];
+  await claimSlot(CODE, { name, kind: 'bot', accuracy: acc, clientId: 'bot-' + Math.random().toString(36).slice(2, 7) });
+});
+$('startBtn').addEventListener('click', () => hostStartGame());
+
+function names() {
+  const o = {};
+  SLOTS.forEach(s => { if (room.players && room.players[s]) o[s] = room.players[s].name; });
+  return o;
+}
+
+function renderBoard() {
+  const P = room.players || {};
+  SLOTS.forEach((s, i) => {
+    const p = P[s]; const el = $('pc' + (i + 1));
+    if (!p) { el.innerHTML = '<div class="muted">—</div>'; return; }
+    el.classList.toggle('me', s === mySlot);
+    el.innerHTML = `<div class="pname">${p.kind === 'bot' ? '🤖' : '🛡️'} ${esc(p.name)} ${s === mySlot ? '<span class="tag you">YOU</span>' : ''}</div>
+      <div class="stats"><span>⭐ ${p.pts}</span><span>🪙 ${p.coins}</span><span>⚔️ ${p.army}</span></div>`;
+  });
+  const a1 = (P.p1 && P.p1.army) || 0, a2 = (P.p2 && P.p2.army) || 0;
+  const pct = (a1 + a2) ? Math.round(a1 / (a1 + a2) * 100) : 50;
+  $('ab1').style.width = pct + '%'; $('ab2').style.width = (100 - pct) + '%';
+  $('al1').textContent = a1 + ' soldiers'; $('al2').textContent = a2 + ' soldiers';
+  $('hdrRound').textContent = room.roundN ? `Round ${room.roundN} of ${room.total || TIMING.rounds}` : '';
+}
+
+// ── Game screen ───────────────────────────────────────────────
+let stageKey = null;      // which round/phase the stage is currently drawn for
+let qState = null;        // in-progress answer for the current question
+let qTimer = null;
+
+function renderGame() {
+  show('scrGame');
+  renderBoard();
+  const r = room.round;
+  if (!r) return;
+  const attackOnMe = r.attack && r.attack.target === mySlot && room.phase === 'question';
+  const banner = $('banner');
+  if (room.phase === 'question' && attackOnMe) {
+    banner.className = 'banner attack'; banner.textContent = `⚠️ SURPRISE ATTACK from ${room.players[r.attack.by].name}! Answer fast to defend!`;
+  } else if (room.phase === 'question' && r.kind === 'speed') {
+    banner.className = 'banner speed'; banner.textContent = '⚡ SPEED BATTLE: fastest correct answer wins big! ⚡';
+  } else if (room.phase === 'question' && r.attack && !mySlot) {
+    banner.className = 'banner attack'; banner.textContent = `⚠️ ${room.players[r.attack.by].name} launched a surprise attack on ${room.players[r.attack.target].name}!`;
+  } else banner.className = 'banner hidden';
+
+  const key = `${r.n}|${room.phase}`;
+  if (room.phase === 'question') {
+    if (mySlot) {
+      const mine = room.answers && room.answers[mySlot];
+      const lockKey = key + (mine && mine.n === r.n ? '|locked' : '');
+      if (stageKey !== lockKey) { stageKey = lockKey; if (mine && mine.n === r.n) drawLocked(mine); else drawQuestion(r); }
+    } else {
+      stageKey = key; drawSpectator(r);
+    }
+  } else if (room.phase === 'results') {
+    if (stageKey !== key) { stageKey = key; stopTimer(); }
+    drawResults(r);
+  }
+  renderHostBar();
+}
+
+function stopTimer() { if (qTimer) { clearInterval(qTimer); qTimer = null; } }
+
+function startTimer(secs, onExpire) {
+  stopTimer();
+  const start = Date.now();
+  const tick = () => {
+    const left = Math.max(0, secs - (Date.now() - start) / 1000);
+    const bar = document.querySelector('#stage .timer'); const lbl = document.querySelector('#stage .secs');
+    if (bar) { bar.firstElementChild.style.width = (left / secs * 100) + '%'; bar.classList.toggle('low', left <= 5); }
+    if (lbl) lbl.textContent = Math.ceil(left) + 's';
+    if (left <= 0) { stopTimer(); onExpire(); }
+  };
+  tick(); qTimer = setInterval(tick, 250);
+}
+
+function qHeader(r) {
+  return `<div class="qhead"><div class="qtype">${esc(B.TYPE_LABEL[r.q.type] || '')}</div><div class="secs"></div></div>
+          <div class="timer"><div style="width:100%"></div></div>`;
+}
+
+function drawQuestion(r) {
+  const q = r.q; const st = $('stage');
+  const secs = (r.durations && r.durations[mySlot]) || TIMING.normalSecs;
+  qState = { start: Date.now(), n: r.n, picked: [], value: '' };
+  let html = qHeader(r);
+  const listen = `<div class="listen"><button class="btn btn-gold" id="sayBtn" type="button">🔊 Hear the word</button></div>`;
+
+  if (q.type === 'tiles') {
+    html += `<div class="qprompt">Listen and build the word</div>${listen}
+      <div class="slotsrow" id="built"></div>
+      <div class="tray" id="tray">${q.tiles.map((t, i) => `<button class="tile ${esc(t.c)}" data-i="${i}" type="button">${esc(t.g)}</button>`).join('')}</div>
+      <div class="actions"><button class="btn" id="clearBtn" type="button">↺ Clear</button><button class="btn btn-ok" id="submitBtn" type="button">✔ Submit</button></div>`;
+  } else if (q.type === 'spell') {
+    html += `<div class="qprompt">Listen and spell the word</div>${listen}
+      <input id="ans" class="field center" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" style="font-size:28px;max-width:420px;display:block;margin:0 auto 14px;"/>
+      <div class="actions"><button class="btn btn-ok" id="submitBtn" type="button">✔ Submit</button></div>`;
+  } else if (q.type === 'affix') {
+    html += `<div class="qprompt">Add the suffix. Spell the new word.</div>
+      <div class="qbig">${esc(q.base)} + -${esc(q.suffix)}</div>
+      <input id="ans" class="field center" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" style="font-size:28px;max-width:420px;display:block;margin:0 auto 14px;"/>
+      <div class="actions"><button class="btn btn-ok" id="submitBtn" type="button">✔ Submit</button></div>`;
+  } else if (q.type === 'meaning') {
+    html += `<div class="qprompt">What does this word part mean?</div>
+      <div class="row" style="justify-content:center;margin-bottom:16px;"><span class="tile latin card">${esc(q.part)}</span></div>
+      <div class="opts">${q.options.map((o, i) => `<button class="opt" data-o="${i}" type="button">${esc(o)}</button>`).join('')}</div>`;
+  } else if (q.type === 'sound') {
+    html += `<div class="qprompt">What sound does this card make?</div>
+      <div class="row" style="justify-content:center;margin-bottom:16px;"><span class="tile ${esc(B.tileColor(q.grapheme))} card">${esc(q.grapheme)}</span></div>
+      <div class="opts">${q.options.map((o, i) => `<button class="opt" data-o="${i}" type="button">${esc(o)}</button>`).join('')}</div>`;
+  }
+  st.innerHTML = html;
+
+  const say = $('sayBtn');
+  if (say) { say.onclick = () => speak(q.word); setTimeout(() => speak(q.word), 350); }
+
+  if (q.type === 'tiles') {
+    const tray = $('tray'), built = $('built');
+    const drawBuilt = () => {
+      built.innerHTML = qState.picked.length
+        ? qState.picked.map((i, k) => `<button class="tile ${esc(q.tiles[i].c)}" data-k="${k}" type="button">${esc(q.tiles[i].g)}</button>`).join('')
+        : Array.from({ length: q.slots || 3 }, () => '<span class="tile ph"></span>').join('');
+      tray.querySelectorAll('.tile').forEach(b => b.classList.toggle('used', qState.picked.includes(+b.dataset.i)));
+      built.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { qState.picked.splice(+b.dataset.k, 1); drawBuilt(); });
+      qState.value = qState.picked.map(i => q.tiles[i].g).join('');
+    };
+    tray.querySelectorAll('.tile').forEach(b => b.onclick = () => {
+      const i = +b.dataset.i; if (qState.picked.includes(i)) return;
+      qState.picked.push(i); drawBuilt();
+    });
+    $('clearBtn').onclick = () => { qState.picked = []; drawBuilt(); };
+    drawBuilt();
+  }
+  const ans = $('ans');
+  if (ans) {
+    ans.addEventListener('input', () => { qState.value = ans.value; });
+    ans.addEventListener('keydown', e => { if (e.key === 'Enter') submitAnswer(ans.value); });
+    setTimeout(() => ans.focus(), 400);
+  }
+  const sub = $('submitBtn');
+  if (sub) sub.onclick = () => {
+    const v = q.type === 'tiles' ? qState.value : (ans ? ans.value : '');
+    if (!v.trim()) { toast(q.type === 'tiles' ? 'Tap tiles to build the word first' : 'Type your answer first'); return; }
+    submitAnswer(v);
+  };
+  st.querySelectorAll('.opt').forEach(b => b.onclick = () => submitAnswer(q.options[+b.dataset.o]));
+
+  startTimer(secs, () => submitAnswer(qState.value || '', true));
+}
+
+let submitting = false;
+async function submitAnswer(value, timedOut) {
+  if (submitting || !qState || !room || room.phase !== 'question' || room.round.n !== qState.n) return;
+  submitting = true; stopTimer();
+  const q = room.round.q;
+  const correct = !timedOut || value ? B.checkAnswer(q, value) : false;
+  const ms = Date.now() - qState.start;
+  try {
+    await store.update(CODE, { ['answers.' + mySlot]: { n: qState.n, value: String(value || ''), correct: !!(value && correct), ms, timedOut: !!timedOut && !value } });
+  } catch (e) { toast('Could not send answer: ' + (e.code || e.message)); }
+  submitting = false;
+}
+
+function drawLocked(mine) {
+  stopTimer();
+  const opp = room.players[other(mySlot)];
+  const theirs = room.answers && room.answers[other(mySlot)] && room.answers[other(mySlot)].n === room.round.n;
+  const ok = mine.correct;
+  $('stage').innerHTML = `<div class="locked ${ok ? 'ok' : 'bad'}">
+      <div class="big">${ok ? '✅' : (mine.timedOut ? '⏰' : '❌')}</div>
+      <div class="msg">${ok ? 'Correct!' : (mine.timedOut ? 'Time\'s up!' : 'Not quite')}</div>
+      <p class="muted" style="margin-top:10px;font-size:18px;">${theirs ? 'Both answers are in…' : `Waiting for ${esc(opp ? opp.name : 'your opponent')}…`}</p>
+    </div>`;
+}
+
+function drawSpectator(r) {
+  const q = r.q;
+  const status = SLOTS.map(s => {
+    const p = room.players[s]; if (!p) return '';
+    const a = room.answers && room.answers[s] && room.answers[s].n === r.n ? room.answers[s] : null;
+    return `<div>${esc(p.name)}<br>${a ? (a.correct ? '✅ ' : '❌ ') + esc(a.value || '(time)') : '⏳ thinking…'}</div>`;
+  }).join('');
+  $('stage').innerHTML = `<div class="qhead"><div class="qtype">${esc(B.TYPE_LABEL[q.type])}${r.kind === 'speed' ? ' · ⚡ Speed Battle' : ''}</div></div>
+    <div class="qprompt">${esc(B.promptText(q))}</div>
+    <div class="qbig">${esc(q.answer)}</div>
+    ${q.word && (q.type === 'tiles' || q.type === 'spell') ? `<div class="listen"><button class="btn btn-sm" id="sayBtn" type="button">🔊 Say it</button></div>` : ''}
+    <div class="spec-status">${status}</div>`;
+  const say = $('sayBtn'); if (say) say.onclick = () => speak(q.word);
+}
+
+let shopBusy = false;
+function drawResults(r) {
+  const res = room.result || {};
+  if (res.n !== r.n) { $('stage').innerHTML = '<div class="locked"><div class="msg">Scoring…</div></div>'; return; }
+  const last = r.n >= (room.total || TIMING.rounds);
+  const me = mySlot && room.players[mySlot];
+  const opp = mySlot && room.players[other(mySlot)];
+  const iAmReady = mySlot && room.ready && room.ready[mySlot];
+  const answerLabel = r.q.type === 'meaning' ? `“${esc(r.q.part)}” means` : r.q.type === 'sound' ? `“${esc(r.q.grapheme)}” says` : r.q.type === 'affix' ? `${esc(r.q.base)} + -${esc(r.q.suffix)} =` : 'The word was';
+  const players = SLOTS.map(s => {
+    const p = room.players[s]; const lg = res.logs && res.logs[s]; if (!p || !lg) return '';
+    return `<div class="res-p ${lg.correct ? 'ok' : 'bad'}"><b>${lg.correct ? '✅' : '❌'} ${esc(p.name)}</b>
+      <div class="given">${lg.timedOut ? 'ran out of time' : 'answered: ' + esc(lg.given)}</div></div>`;
+  }).join('');
+  const remaining = Math.max(0, Math.ceil(((res.until || 0) - Date.now()) / 1000));
+
+  let shop = '';
+  if (mySlot && !last) {
+    const attacked = room.attacks && room.attacks[other(mySlot)];
+    shop = `<div class="qtype" style="margin-top:4px;">🏰 Armory</div>
+      <div class="shop">
+        <button class="btn" data-buy="soldier" type="button" ${me.coins < ECON.soldierCost ? 'disabled' : ''}>🗡️ Soldier<small>${ECON.soldierCost} 🪙 → +${ECON.soldierArmy} ⚔️</small></button>
+        <button class="btn" data-buy="knight" type="button" ${me.coins < ECON.knightCost ? 'disabled' : ''}>🐎 Knight<small>${ECON.knightCost} 🪙 → +${ECON.knightArmy} ⚔️</small></button>
+        <button class="btn attack" data-buy="attack" type="button" ${me.coins < ECON.attackCost || attacked ? 'disabled' : ''}>💥 Surprise Attack<small>${attacked ? 'attack ready!' : `${ECON.attackCost} 🪙 → 20s question for ${esc(opp.name)}`}</small></button>
+      </div><div class="shopmsg" id="shopMsg"></div>`;
+  }
+  const readyBtn = mySlot
+    ? `<button class="btn btn-gold" id="readyBtn" type="button" ${iAmReady ? 'disabled' : ''}>${iAmReady ? '✔ Ready, waiting…' : (last ? '🏆 See who won' : '▶ Ready for next round')}</button>`
+    : '';
+  $('stage').innerHTML = `
+    <div class="qhead"><div class="qtype">Round ${r.n} results${r.kind === 'speed' ? ' · ⚡ Speed Battle' : ''}</div><div class="secs">${remaining}s</div></div>
+    <div class="res-answer">${answerLabel} <b>${esc(r.q.answer)}</b></div>
+    <div class="res-players">${players}</div>
+    <ul class="lines">${(res.lines || []).map(l => `<li>${esc(l)}</li>`).join('')}</ul>
+    ${shop}
+    <div class="actions">${readyBtn}</div>`;
+  const rb = $('readyBtn'); if (rb) rb.onclick = () => store.update(CODE, { ['ready.' + mySlot]: true });
+  document.querySelectorAll('[data-buy]').forEach(b => b.onclick = () => buy(b.dataset.buy));
+}
+
+async function buy(what) {
+  if (shopBusy || !mySlot) return;
+  const me = room.players[mySlot]; const opp = other(mySlot);
+  const cost = what === 'soldier' ? ECON.soldierCost : what === 'knight' ? ECON.knightCost : ECON.attackCost;
+  if (me.coins < cost) return;
+  shopBusy = true;
+  try {
+    if (what === 'attack') {
+      if (room.attacks && room.attacks[opp]) return;
+      await store.update(CODE, { [`players.${mySlot}.coins`]: op.inc(-cost), ['attacks.' + opp]: mySlot });
+      toast(`💥 Attack launched! ${room.players[opp].name} gets a 20-second question next round.`);
+    } else {
+      const gain = what === 'soldier' ? ECON.soldierArmy : ECON.knightArmy;
+      await store.update(CODE, { [`players.${mySlot}.coins`]: op.inc(-cost), [`players.${mySlot}.army`]: op.inc(gain) });
+      toast(what === 'soldier' ? '🗡️ Soldier recruited!' : '🐎 Knight recruited!');
+    }
+  } catch (e) { toast('Could not buy: ' + (e.code || e.message)); }
+  finally { shopBusy = false; }
+}
+
+function renderHostBar() {
+  const hb = $('hostbar');
+  if (!IS_HOST) { hb.classList.add('hidden'); return; }
+  hb.classList.remove('hidden');
+  const phase = room.phase === 'question' ? 'Question in progress' : 'Results & armory';
+  hb.innerHTML = `<span>🎓 Teacher controls · ${phase}</span>
+    <span class="row">
+      <button class="btn btn-sm" id="hSkip" type="button">${room.phase === 'question' ? '⏭ End round now' : '⏭ Next round now'}</button>
+      <button class="btn btn-sm" id="hEnd" type="button">🏁 End battle</button>
+    </span>`;
+  $('hSkip').onclick = () => { if (room.phase === 'question') hostResolve(true); else hostAdvance(true); };
+  $('hEnd').onclick = () => { if (confirm('End the battle now and show the winner?')) hostFinish(); };
+}
+
+// ── End screen ────────────────────────────────────────────────
+function renderEnd() {
+  stopTimer(); show('scrEnd'); renderBoard();
+  $('hdrRound').textContent = 'Battle over';
+  const P = room.players || {};
+  const w = room.winner;
+  const title = w === 'tie' ? '🤝 It\'s a tie!' : w && P[w] ? `${esc(P[w].name)} wins the battle!` : 'Battle over';
+  const youLine = mySlot ? (w === mySlot ? '<p class="center" style="font-size:22px;color:var(--ok);font-weight:700;">Victory! Your army rules the field.</p>'
+    : w === 'tie' ? '' : '<p class="center muted" style="font-size:20px;">Good fight. Train up and try again!</p>') : '';
+  const col = s => {
+    const p = P[s]; if (!p) return '';
+    const missed = (p.log || []).filter(l => !l.correct);
+    return `<div class="card" style="padding:14px;">
+      <h2>${p.kind === 'bot' ? '🤖' : '🛡️'} ${esc(p.name)}</h2>
+      <div class="stats" style="margin:6px 0 8px;"><span>✅ ${p.correct}</span><span>❌ ${p.wrong}</span><span>🪙 ${p.coins}</span><span>⚔️ ${p.army}</span></div>
+      ${p.kind === 'bot' ? '' : missed.length ? `<div class="qtype">Review these</div><ul class="review">${missed.map(l =>
+        `<li>${esc(l.answer)} <span>${l.type === 'tiles' || l.type === 'spell' ? '' : '· ' + esc(B.TYPE_LABEL[l.type]) + ' '}(${l.timedOut ? 'no answer' : 'wrote “' + esc(l.given) + '”'})</span></li>`).join('')}</ul>`
+        : '<p class="muted">Perfect battle, nothing to review! 🌟</p>'}
+    </div>`;
+  };
+  $('scrEnd').innerHTML = `<div class="trophy">🏆</div><h1 class="center">${title}</h1>${youLine}
+    <div class="end-grid">${col('p1')}${col('p2')}</div>
+    ${IS_HOST ? `<div class="actions" style="margin-top:16px;"><button class="btn btn-gold" id="againBtn" type="button">🔁 Play again</button></div>` : ''}`;
+  const ag = $('againBtn'); if (ag) ag.onclick = hostRematch;
+}
+
+// ============================================================
+// HOST: runs the rounds. Only the teacher's device does this.
+// ============================================================
+let ctx = null;
+const botTimers = {};
+let resolving = false, advancing = false, botShopDone = null;
+let resolvedKey = null, advancedKey = null;   // never score or advance the same round twice
+const hostClock = () => Date.now();
+
+function getCtx() {
+  if (!ctx) ctx = B.buildContext(room.lesson || { step: '1.3' });
+  return ctx;
+}
+
+async function hostStartGame() {
+  const patch = { status: 'playing', total: TIMING.rounds, used: [], attacks: {}, winner: null };
+  SLOTS.forEach(s => { if (room.players[s]) Object.entries(freshStats()).forEach(([k, v]) => { patch[`players.${s}.${k}`] = v; }); });
+  await store.update(CODE, patch);
+  await hostStartRound(1);
+}
+
+async function hostStartRound(n) {
+  const kind = B.roundKind(n);
+  const used = new Set(room.used || []);
+  const q = B.makeQuestion(getCtx(), used, kind);
+  const attackTarget = SLOTS.find(s => room.attacks && room.attacks[s] && room.players[s]);
+  const attack = attackTarget ? { target: attackTarget, by: room.attacks[attackTarget] } : null;
+  const durations = {};
+  SLOTS.forEach(s => {
+    let d = kind === 'speed' ? TIMING.speedSecs : TIMING.normalSecs;
+    if (attack && attack.target === s) d = Math.min(d, TIMING.attackSecs);
+    durations[s] = d;
+  });
+  await store.update(CODE, {
+    phase: 'question', roundN: n,
+    round: { n, kind, q, durations, attack, hostStart: hostClock() },
+    answers: {}, ready: {}, attacks: {}, result: null,
+    used: q.word ? (room.used || []).concat([q.word]).slice(-200) : (room.used || []),
+  });
+}
+
+function scheduleBots() {
+  const r = room.round;
+  SLOTS.forEach(s => {
+    const p = room.players[s];
+    if (!p || p.kind !== 'bot') return;
+    const key = `${CODE}|${r.n}|${r.hostStart}|${s}`;
+    if (botTimers[key]) return;
+    const answered = room.answers && room.answers[s] && room.answers[s].n === r.n;
+    if (answered) return;
+    const delay = Math.min(B.botDelayMs(r.kind), (r.durations[s] - 2) * 1000);
+    botTimers[key] = setTimeout(async () => {
+      if (!room || room.phase !== 'question' || room.round.n !== r.n) return;
+      const a = B.botAnswer(r.q, p.accuracy);
+      await store.update(CODE, { ['answers.' + s]: { n: r.n, value: a.value, correct: a.correct, ms: delay } }).catch(() => {});
+    }, delay);
+  });
+}
+
+async function hostResolve(force) {
+  const r = room.round;
+  if (resolving || room.phase !== 'question' || !r) return;
+  const active = SLOTS.filter(s => room.players[s]);
+  const answers = {};
+  active.forEach(s => { const a = room.answers && room.answers[s]; if (a && a.n === r.n) answers[s] = a; });
+  const now = hostClock();
+  const allIn = active.every(s => answers[s]);
+  const allExpired = active.every(s => answers[s] || now > r.hostStart + (r.durations[s] + TIMING.graceSecs) * 1000);
+  if (!force && !allIn && !allExpired) return;
+  const rk = `${CODE}|${room.status}|${r.n}|${r.hostStart}`;
+  if (resolvedKey === rk) return;
+  resolvedKey = rk;
+  resolving = true;
+  try {
+    const out = B.resolveRound(r, room.players, answers, names());
+    const patch = {
+      phase: 'results',
+      result: { n: r.n, lines: out.lines, logs: out.logs, speedWinner: out.speedWinner, attackResult: out.attackResult, until: now + TIMING.resultsSecs * 1000 },
+      ready: {},
+    };
+    active.forEach(s => {
+      const d = out.deltas[s];
+      ['pts', 'coins', 'army', 'correct', 'wrong'].forEach(k => { if (d[k]) patch[`players.${s}.${k}`] = op.inc(d[k]); });
+      patch[`players.${s}.log`] = op.union(JSON.parse(JSON.stringify(out.logs[s])));
+    });
+    await store.update(CODE, patch);
+  } finally { resolving = false; }
+}
+
+async function hostBotShop() {
+  const r = room.round;
+  if (botShopDone === `${CODE}|${r.n}|${r.hostStart}`) return;
+  botShopDone = `${CODE}|${r.n}|${r.hostStart}`;
+  const last = r.n >= (room.total || TIMING.rounds);
+  for (const s of SLOTS) {
+    const p = room.players[s];
+    if (!p || p.kind !== 'bot') continue;
+    const patch = { ['ready.' + s]: true };
+    if (!last) {
+      const opp = other(s);
+      const buys = B.botShop(p, !!room.players[opp] && !(room.attacks && room.attacks[opp]));
+      let coins = 0, army = 0;
+      buys.forEach(b => {
+        if (b === 'soldier') { coins -= ECON.soldierCost; army += ECON.soldierArmy; }
+        if (b === 'knight') { coins -= ECON.knightCost; army += ECON.knightArmy; }
+        if (b === 'attack') { coins -= ECON.attackCost; patch['attacks.' + opp] = s; }
+      });
+      if (coins) patch[`players.${s}.coins`] = op.inc(coins);
+      if (army) patch[`players.${s}.army`] = op.inc(army);
+    }
+    setTimeout(() => store.update(CODE, patch).catch(() => {}), 2500 + Math.random() * 3000);
+  }
+}
+
+async function hostAdvance(force) {
+  if (advancing || room.phase !== 'results' || !room.result || room.result.n !== room.round.n) return;
+  const active = SLOTS.filter(s => room.players[s]);
+  const allReady = active.every(s => room.ready && room.ready[s]);
+  if (!force && !allReady && hostClock() < (room.result.until || 0)) return;
+  const ak = `${CODE}|${room.round.n}|${room.round.hostStart}`;
+  if (advancedKey === ak) return;
+  advancedKey = ak;
+  advancing = true;
+  try {
+    const n = room.round.n;
+    if (n >= (room.total || TIMING.rounds)) await hostFinish();
+    else await hostStartRound(n + 1);
+  } finally { advancing = false; }
+}
+
+async function hostFinish() {
+  stopTimer();
+  await store.update(CODE, { status: 'done', phase: 'done', winner: B.winnerOf(room.players) });
+}
+
+async function hostRematch() {
+  const patch = { status: 'lobby', phase: 'lobby', roundN: 0, round: null, answers: {}, ready: {}, attacks: {}, result: null, winner: null, used: [] };
+  SLOTS.forEach(s => { if (room.players[s]) Object.entries(freshStats()).forEach(([k, v]) => { patch[`players.${s}.${k}`] = v; }); });
+  stageKey = null;
+  await store.update(CODE, patch);
+}
+
+function hostTick() {
+  if (!room || room.status !== 'playing') return;
+  if (room.phase === 'question') { scheduleBots(); hostResolve(false); }
+  else if (room.phase === 'results') { hostBotShop(); hostAdvance(false); }
+}
+if (IS_HOST) setInterval(() => { if (room) { hostTick(); if (room.phase === 'results' && room.status === 'playing') drawResultsTick(); } }, 500);
+// Non-hosts also refresh the results countdown
+setInterval(() => { if (!IS_HOST && room && room.status === 'playing' && room.phase === 'results') drawResultsTick(); }, 1000);
+function drawResultsTick() {
+  const el = document.querySelector('#stage .secs');
+  if (el && room.result) el.textContent = Math.max(0, Math.ceil((room.result.until - Date.now()) / 1000)) + 's';
+}
+
+// Test hook (local mode only)
+if (LOCAL) window.__wbr = { get room() { return room; }, get slot() { return mySlot; } };
+</script>
+</body>
+</html>

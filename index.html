@@ -538,9 +538,9 @@ select{cursor:pointer;}textarea{resize:vertical;}
   </div>
 </div>
 
-<script src="js/config.js?v=20261014g"></script>
-<script src="js/game.js?v=20261014g"></script>
-<script type="module" src="js/firebase.js?v=20261014g"></script>
+<script src="js/config.js?v=20261015a"></script>
+<script src="js/game.js?v=20261015a"></script>
+<script type="module" src="js/firebase.js?v=20261015a"></script>
 <script>
 // ── State ──────────────────────────────────────────────
 const S = {
@@ -612,6 +612,53 @@ document.getElementById('createBtn').addEventListener('click',async()=>{
   S.sessionActive=true;
   updateScoreBar();
   buildCardLib();
+});
+
+// ── Start Lesson → launch the Battle Mode game ─────────
+function battleWords(ids){
+  const out=[];
+  ids.forEach(id=>{const el=document.getElementById(id);if(!el)return;
+    el.value.split(/[\n,;]+/).map(w=>w.trim().toLowerCase()).filter(w=>/^[a-z]{2,}$/.test(w)).forEach(w=>{if(!out.includes(w))out.push(w);});});
+  return out;
+}
+function battleCode(){
+  const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let c='';
+  for(let i=0;i<4;i++)c+=A[Math.floor(Math.random()*A.length)];
+  return c;
+}
+document.getElementById('startLessonBtn').addEventListener('click',async()=>{
+  if(!S.step){alert('Click Create Lesson first.');return;}
+  if(!window.fb||!window.fb.createBattle){alert('The game server is still connecting. Wait a moment and try again.');return;}
+  const btn=document.getElementById('startLessonBtn');
+  const win=window.open('','_blank');   // open now so the browser doesn't block the new tab
+  btn.disabled=true;btn.textContent='⏳ Starting…';
+  try{
+    const lesson={
+      step:S.step, reviewSteps:S.reviewSteps||[], student:S.student||'', teacher:S.teacher||'',
+      curWords:battleWords(['curWords','spCW','dReal']),
+      revWords:battleWords(['revWords','spRW']),
+      deck:DRILL.deck.map(c=>({grapheme:c.grapheme,step:c.step})),
+    };
+    let code=null;
+    for(let i=0;i<6&&!code;i++){
+      const c=battleCode();
+      const ok=await window.fb.createBattle(c,{
+        code:c, createdMs:Date.now(), status:'lobby', phase:'lobby', roundN:0, total:8,
+        lesson, players:{}, answers:{}, ready:{}, attacks:{}, used:[], round:null, result:null, winner:null,
+      });
+      if(ok)code=c;
+    }
+    if(!code)throw new Error('could not find a free room code');
+    const url=`battle.html?room=${code}&host=1`;
+    if(win){win.location.href=url;}
+    else{location.href=url;}
+  }catch(err){
+    if(win)win.close();
+    console.error('Battle error:',err);
+    alert('Could not start the battle: '+(err.code||err.message));
+  }finally{
+    btn.disabled=false;btn.textContent='▶ Start Lesson';
+  }
 });
 
 // ── Block toggle ───────────────────────────────────────
