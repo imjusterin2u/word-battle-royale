@@ -112,6 +112,18 @@ label.lbl{font-size:13px;font-weight:700;color:var(--muted);text-transform:upper
 .tile.latin,.tile.greek{background:var(--tl-bg);color:var(--tl-txt);border-color:var(--tl-bdr);}
 .tile.used{visibility:hidden;}
 .tile.card{min-width:120px;height:110px;font-size:52px;}
+/* White Wilson syllable cards (Step 3.1 and up) */
+.modes{display:flex;justify-content:center;gap:8px;margin-bottom:12px;}
+.modes .btn.on{background:var(--gold);color:#2a1d00;border-color:#b98a10;}
+.sylcards{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-bottom:16px;}
+.sylcard{background:#fff;color:#141b2b;border-radius:12px;min-width:130px;min-height:88px;padding:10px 12px;border:3px solid #cfd8ea;
+  display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap;box-shadow:0 6px 0 rgba(0,0,0,.35);cursor:pointer;}
+.sylcard.active,.sylcard:focus-within{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,192,64,.45),0 6px 0 rgba(0,0,0,.35);}
+.sylcard .ph{color:#9aa3b5;font-size:15px;font-weight:600;}
+.sylin{width:120px;border:none;background:transparent;font-size:30px;font-weight:700;text-align:center;color:#141b2b;font-family:inherit;}
+.sylin:focus{outline:none;}
+.sylcard .tile{height:50px;min-width:44px;font-size:22px;padding:0 8px;}
+.sylsplit{color:var(--muted);font-size:18px;}
 
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .opt{padding:18px 12px;border-radius:14px;font-size:22px;font-weight:700;background:var(--panel2);color:var(--text);border:2px solid var(--line);}
@@ -242,8 +254,8 @@ label.lbl{font-size:13px;font-weight:700;color:var(--muted);text-transform:upper
 
 <div class="toast hidden" id="toast"></div>
 
-<script src="js/config.js?v=20261015a"></script>
-<script src="js/battle-core.js?v=20261015a"></script>
+<script src="js/config.js?v=20261019a"></script>
+<script src="js/battle-core.js?v=20261019a"></script>
 <script type="module">
 const B = window.WBRBattle;
 const { ECON, TIMING } = B;
@@ -577,7 +589,17 @@ function drawQuestion(r) {
   let html = qHeader(r);
   const listen = `<div class="listen"><button class="btn btn-gold" id="sayBtn" type="button">🔊 Hear the word</button></div>`;
 
-  if (q.type === 'tiles') {
+  const sylMode = !!(q.syllables && q.syllables.length > 1 && (q.type === 'tiles' || q.type === 'spell'));
+  if (sylMode) {
+    html += `<div class="qprompt">Listen. Spell it one syllable at a time.</div>${listen}
+      <div class="modes">
+        <button class="btn btn-sm" id="modeType" type="button">⌨️ Type</button>
+        <button class="btn btn-sm" id="modeTiles" type="button">🧩 Tiles</button>
+      </div>
+      <div class="sylcards" id="sylcards"></div>
+      <div class="tray hidden" id="tray">${q.tiles ? q.tiles.map((t, i) => `<button class="tile ${esc(t.c)}" data-i="${i}" type="button">${esc(t.g)}</button>`).join('') : ''}</div>
+      <div class="actions"><button class="btn" id="clearBtn" type="button">↺ Clear</button><button class="btn btn-ok" id="submitBtn" type="button">✔ Submit</button></div>`;
+  } else if (q.type === 'tiles') {
     html += `<div class="qprompt">Listen and build the word</div>${listen}
       <div class="slotsrow" id="built"></div>
       <div class="tray" id="tray">${q.tiles.map((t, i) => `<button class="tile ${esc(t.c)}" data-i="${i}" type="button">${esc(t.g)}</button>`).join('')}</div>
@@ -605,7 +627,9 @@ function drawQuestion(r) {
   const say = $('sayBtn');
   if (say) { say.onclick = () => speak(q.word); setTimeout(() => speak(q.word), 350); }
 
-  if (q.type === 'tiles') {
+  if (sylMode) {
+    setupSyllables(q);
+  } else if (q.type === 'tiles') {
     const tray = $('tray'), built = $('built');
     const drawBuilt = () => {
       built.innerHTML = qState.picked.length
@@ -630,13 +654,85 @@ function drawQuestion(r) {
   }
   const sub = $('submitBtn');
   if (sub) sub.onclick = () => {
+    if (sylMode) {
+      const parts = sylParts(q);
+      if (parts.some(p => !p)) { toast('Fill every syllable card first'); return; }
+      submitAnswer(parts.join('·'));
+      return;
+    }
     const v = q.type === 'tiles' ? qState.value : (ans ? ans.value : '');
     if (!v.trim()) { toast(q.type === 'tiles' ? 'Tap tiles to build the word first' : 'Type your answer first'); return; }
     submitAnswer(v);
   };
   st.querySelectorAll('.opt').forEach(b => b.onclick = () => submitAnswer(q.options[+b.dataset.o]));
 
-  startTimer(secs, () => submitAnswer(qState.value || '', true));
+  startTimer(secs, () => {
+    if (sylMode) { const parts = sylParts(q); submitAnswer(parts.some(Boolean) ? parts.join('·') : '', true); }
+    else submitAnswer(qState.value || '', true);
+  });
+}
+
+// ── Syllable cards ────────────────────────────────────────────
+// Each white card holds one syllable. Students either type into the cards
+// or tap a card and then tap tiles to drop them in.
+function setupSyllables(q) {
+  const n = q.syllables.length;
+  qState.mode = (q.type === 'tiles' && q.tiles) ? 'tiles' : 'type';
+  qState.typed = Array(n).fill('');
+  qState.cards = Array.from({ length: n }, () => []);
+  qState.active = 0;
+  if (!q.tiles) $('modeTiles').classList.add('hidden');
+  $('modeType').onclick = () => { qState.mode = 'type'; drawSyl(q, true); };
+  $('modeTiles').onclick = () => { qState.mode = 'tiles'; drawSyl(q, true); };
+  $('clearBtn').onclick = () => {
+    qState.typed = Array(n).fill(''); qState.cards = Array.from({ length: n }, () => []); qState.active = 0; drawSyl(q, true);
+  };
+  $('tray').querySelectorAll('.tile').forEach(b => b.onclick = () => {
+    const i = +b.dataset.i;
+    if (qState.cards.some(c => c.includes(i))) return;
+    qState.cards[qState.active].push(i); drawSyl(q);
+  });
+  drawSyl(q, true);
+}
+
+function drawSyl(q, focus) {
+  const box = $('sylcards');
+  $('modeType').classList.toggle('on', qState.mode === 'type');
+  $('modeTiles').classList.toggle('on', qState.mode === 'tiles');
+  $('tray').classList.toggle('hidden', qState.mode !== 'tiles');
+  if (qState.mode === 'type') {
+    box.innerHTML = qState.typed.map((v, i) =>
+      `<label class="sylcard"><input class="sylin" data-s="${i}" value="${esc(v)}" aria-label="Syllable ${i + 1}" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" maxlength="12"/></label>`).join('');
+    const ins = box.querySelectorAll('.sylin');
+    ins.forEach(inp => {
+      inp.addEventListener('input', () => { qState.typed[+inp.dataset.s] = inp.value; });
+      inp.addEventListener('keydown', e => {
+        if (e.key !== 'Enter') return;
+        const k = +inp.dataset.s;
+        if (k < ins.length - 1) ins[k + 1].focus(); else $('submitBtn').click();
+      });
+    });
+    if (focus) setTimeout(() => { const first = [...ins].find(i => !i.value) || ins[0]; if (first) first.focus(); }, 400);
+  } else {
+    box.innerHTML = qState.cards.map((c, i) =>
+      `<div class="sylcard ${i === qState.active ? 'active' : ''}" data-s="${i}" tabindex="0" aria-label="Syllable card ${i + 1}">
+        ${c.length ? c.map((ti, k) => `<button class="tile ${esc(q.tiles[ti].c)}" data-k="${k}" type="button">${esc(q.tiles[ti].g)}</button>`).join('') : '<span class="ph">tap, then add tiles</span>'}
+      </div>`).join('');
+    box.querySelectorAll('.sylcard').forEach(card => {
+      card.onclick = e => {
+        const s = +card.dataset.s;
+        const t = e.target.closest('[data-k]');
+        if (t) qState.cards[s].splice(+t.dataset.k, 1);
+        qState.active = s; drawSyl(q);
+      };
+    });
+    $('tray').querySelectorAll('.tile').forEach(b => b.classList.toggle('used', qState.cards.some(c => c.includes(+b.dataset.i))));
+  }
+}
+
+function sylParts(q) {
+  if (qState.mode === 'tiles') return qState.cards.map(c => c.map(i => q.tiles[i].g).join(''));
+  return qState.typed.map(v => v.trim().toLowerCase().replace(/[^a-z]/g, ''));
 }
 
 let submitting = false;
@@ -673,7 +769,7 @@ function drawSpectator(r) {
   }).join('');
   $('stage').innerHTML = `<div class="qhead"><div class="qtype">${esc(B.TYPE_LABEL[q.type])}${r.kind === 'speed' ? ' · ⚡ Speed Battle' : ''}</div></div>
     <div class="qprompt">${esc(B.promptText(q))}</div>
-    <div class="qbig">${esc(q.answer)}</div>
+    <div class="qbig">${esc(q.answer)}${q.syllables && q.syllables.length > 1 ? ` <span class="sylsplit">(${esc(q.syllables.join(' · '))})</span>` : ''}</div>
     ${q.word && (q.type === 'tiles' || q.type === 'spell') ? `<div class="listen"><button class="btn btn-sm" id="sayBtn" type="button">🔊 Say it</button></div>` : ''}
     <div class="spec-status">${status}</div>`;
   const say = $('sayBtn'); if (say) say.onclick = () => speak(q.word);
@@ -710,7 +806,7 @@ function drawResults(r) {
     : '';
   $('stage').innerHTML = `
     <div class="qhead"><div class="qtype">Round ${r.n} results${r.kind === 'speed' ? ' · ⚡ Speed Battle' : ''}</div><div class="secs">${remaining}s</div></div>
-    <div class="res-answer">${answerLabel} <b>${esc(r.q.answer)}</b></div>
+    <div class="res-answer">${answerLabel} <b>${esc(r.q.answer)}</b>${r.q.syllables && r.q.syllables.length > 1 ? ` <span class="sylsplit">${esc(r.q.syllables.join(' · '))}</span>` : ''}</div>
     <div class="res-players">${players}</div>
     <ul class="lines">${(res.lines || []).map(l => `<li>${esc(l)}</li>`).join('')}</ul>
     ${shop}

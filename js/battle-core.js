@@ -143,6 +143,143 @@
     return c || 'welded';
   }
 
+  // ── Syllable division (Wilson Steps 3–6) ────────────────────
+  // Order: split off a taught prefix, split off a taught suffix, then divide
+  // the rest between vowel sounds. Digraphs, ck, tch, qu and x stay together;
+  // VCCV → VC|CV; VCCCV keeps a blend with the next syllable; VCV is closed
+  // (VC|V) before Step 5 and open (V|CV) from Step 5 on.
+  const DIGRAPHS = ['tch', 'ch', 'sh', 'th', 'wh', 'ck', 'ph', 'qu'];
+  const BLENDS = new Set(['bl', 'br', 'cl', 'cr', 'dr', 'fl', 'fr', 'gl', 'gr', 'pl', 'pr', 'sc', 'sk', 'sl', 'sm', 'sn', 'sp', 'st', 'sw', 'tr', 'tw',
+    'thr', 'shr', 'str', 'spl', 'spr', 'scr', 'squ']);
+  const PREFIXES = ['trans', 'mid', 'mis', 'non', 'un', 'ab', 'ad', 'con', 'com', 'ex', 'ob', 'dis', 'en', 'em', 'in', 'im', 'sub',
+    'co', 'de', 'pre', 'pro', 're'];
+  const PREFIX_STEP = { mid: '3.1', mis: '3.1', non: '3.1', trans: '3.1', un: '3.1', ab: '3.2', ad: '3.2', con: '3.2', com: '3.2',
+    ex: '3.2', ob: '3.2', dis: '3.2', en: '3.2', em: '3.2', in: '3.2', im: '3.2', sub: '3.2', co: '5.1', de: '5.1', e: '5.1',
+    pre: '5.1', pro: '5.1', re: '5.1' };
+  const SYLLABLE_START = '3.1';
+
+  function isVowelAt(w, i) {
+    const c = w[i];
+    if ('aeiou'.includes(c)) return !(c === 'u' && w[i - 1] === 'q');
+    if (c === 'y') return i > 0 && !(w[i + 1] && 'aeiou'.includes(w[i + 1]));
+    return false;
+  }
+
+  // Vowel sounds in a chunk: runs of vowels, ignoring a silent final e (VCe)
+  function nuclei(w) {
+    const out = [];
+    for (let i = 0; i < w.length; i++) {
+      if (!isVowelAt(w, i)) continue;
+      const start = i;
+      while (i + 1 < w.length && isVowelAt(w, i + 1) && w[i + 1] !== 'y') i++;
+      out.push([start, i]);
+    }
+    if (out.length > 1) {
+      const last = out[out.length - 1];
+      const silentE = last[0] === w.length - 1 && w[w.length - 1] === 'e' && !isVowelAt(w, w.length - 2);
+      if (silentE) out.pop();
+    }
+    return out;
+  }
+
+  function tokenize(cluster) {
+    const toks = [];
+    let i = 0;
+    while (i < cluster.length) {
+      const d = DIGRAPHS.find(g => cluster.startsWith(g, i));
+      if (d) { toks.push(d); i += d.length; } else { toks.push(cluster[i]); i++; }
+    }
+    return toks;
+  }
+
+  function divideCore(w, open) {
+    // a silent-e syllable inside a word ends after the e: base|ball, home|work
+    const m = /[aeiou][b-df-hj-np-tv-z]e(?=[b-df-hj-np-tv-z])/.exec(w);
+    if (m && m.index > 0) {
+      const cut = m.index + 3;
+      const left = w.slice(0, cut), right = w.slice(cut);
+      if (nuclei(right).length && !/^[aeiou]/.test(right)) return divideCore(left, open).concat(divideCore(right, open));
+    }
+    const nu = nuclei(w);
+    if (nu.length < 2) return [w];
+    const parts = [];
+    let from = 0;
+    for (let k = 0; k < nu.length - 1; k++) {
+      const a = nu[k][1] + 1, b = nu[k + 1][0];
+      const toks = tokenize(w.slice(a, b));
+      let keep;   // how many consonant tokens stay with the first syllable
+      if (toks.length === 0) keep = 0;
+      else if (toks.length === 1) keep = (open && !['ck', 'tch', 'x'].includes(toks[0])) ? 0 : 1;
+      else if (toks.length === 2) keep = ['ck', 'tch'].includes(toks[1]) ? 2 : 1;
+      else keep = BLENDS.has(toks.slice(1).join('')) ? 1 : 2;
+      let cut = a;
+      for (let t = 0; t < keep; t++) cut += toks[t].length;
+      if (toks.length === 0) cut = a;   // vowel next to vowel: split between them
+      parts.push(w.slice(from, cut));
+      from = cut;
+    }
+    parts.push(w.slice(from));
+    return parts.filter(Boolean);
+  }
+
+  const VOWEL_SUFFIX_SYLLABLE = new Set(['ing', 'ish', 'able', 'en', 'er', 'est', 'y', 'ive', 'or']);
+  const CONS_SUFFIX = new Set(['ful', 'less', 'ness', 'ment', 'ly', 'ty']);
+
+  function syllabify(word, step, overrides, known) {
+    const w = normWord(word);
+    if (overrides && overrides[w]) return overrides[w].slice();
+    const n = stepNum(step);
+    if (!(n >= stepNum(SYLLABLE_START))) return [w];
+    let head = [], tail = [], core = w;
+
+    // suffix first (only ones taught by this step)
+    let attach = '';   // -s, -es and -ed that don't add a syllable join the last one
+    const sfxs = Object.keys(SUFFIX_STEP).filter(x => stepNum(SUFFIX_STEP[x]) <= n).sort((a, b) => b.length - a.length);
+    for (const sfx of sfxs) {
+      if (!core.endsWith(sfx) || core.length - sfx.length < 3) continue;
+      const base = core.slice(0, -sfx.length);
+      if (!nuclei(base).length) continue;
+      const vowelSfx = /^[aeiouy]/.test(sfx);
+      // -y and -or are easy to mistake for part of the word (enemy, color): only split them off a known base
+      if (known && (sfx === 'y' || sfx === 'or') && !known.has(base) && !deriveBase(core, sfx, known)) continue;
+      if (sfx === 's' || (sfx === 'es' && !/(s|x|z|ch|sh)$/.test(base)) || (sfx === 'ed' && !/[td]$/.test(base))) {
+        if (sfx === 'es' && !/(s|x|z|ch|sh)$/.test(base)) { attach = 's'; core = core.slice(0, -1); }
+        else { attach = sfx; core = base; }
+        break;
+      }
+      if (!(CONS_SUFFIX.has(sfx) || VOWEL_SUFFIX_SYLLABLE.has(sfx) || sfx === 'es' || sfx === 'ed')) continue;
+      let suffixPart = sfx, b = base;
+      // a doubled final consonant splits between the pair (hop|ping), but not bonus letters (spell|ing)
+      if (vowelSfx && /([b-dghj-km-rtv-y])\1$/.test(b)) { suffixPart = b.slice(-1) + sfx; b = b.slice(0, -1); }
+      tail = [suffixPart]; core = b;
+      break;
+    }
+
+    // a prefix needs a consonant right after it and a vowel sound later (un|til, re|pel, not en|emy)
+    const pre = PREFIXES.filter(p => stepNum(PREFIX_STEP[p]) <= n).sort((a, b) => b.length - a.length).find(p => {
+      if (!core.startsWith(p) || core.length - p.length < 3) return false;
+      const rest = core.slice(p.length);
+      return !isVowelAt(rest, 0) && nuclei(rest).length > 0;
+    });
+    if (pre && nuclei(core.slice(pre.length)).length) { head = [pre]; core = core.slice(pre.length); }
+
+    const parts = head.concat(divideCore(core, n >= 5.1), tail);
+    if (attach) parts[parts.length - 1] += attach;
+    return parts.length ? parts : [w];
+  }
+
+  // Teacher can type "bas-ket" or "bas/ket" in the plan to set the division
+  function syllableOverrides(list) {
+    const o = {};
+    (list || []).forEach(raw => {
+      const r = String(raw || '').trim().toLowerCase();
+      if (!/[-/·]/.test(r)) return;
+      const parts = r.split(/[-/·]+/).filter(Boolean);
+      if (parts.length > 1 && parts.every(p => /^[a-z]+$/.test(p))) o[parts.join('')] = parts;
+    });
+    return o;
+  }
+
   // ── Lesson context (built once per room) ────────────────────
   function buildContext(lesson) {
     const step = lesson.step;
@@ -153,8 +290,10 @@
       .map(w => ({ step: w.step, word: normWord(w.word) }))
       .filter(w => isWord(w.word));
 
-    const planCur = (lesson.curWords || []).map(normWord).filter(isWord);
-    const planRev = (lesson.revWords || []).map(normWord).filter(isWord);
+    const stripMarks = w => normWord(w).replace(/[-/·]/g, '');
+    const overrides = syllableOverrides((lesson.curWords || []).concat(lesson.revWords || []));
+    const planCur = (lesson.curWords || []).map(stripMarks).filter(isWord);
+    const planRev = (lesson.revWords || []).map(stripMarks).filter(isWord);
 
     let current = uniq(real.filter(w => w.step === step).map(w => w.word));
     let reviewWords = uniq(real.filter(w => review.has(w.step)).map(w => w.word));
@@ -213,6 +352,8 @@
       },
       learned,
       allWords,
+      overrides,
+      syllablesOn: n >= stepNum(SYLLABLE_START),
       affixes,
       meanings,
       sounds: soundCards.map(c => ({ grapheme: c.grapheme, sounds: visibleSounds(c) })),
@@ -302,17 +443,34 @@
       return { type, grapheme: card.grapheme, options: shuffle([right, ...wrong]), answer: right, word: card.grapheme };
     }
     const word = pickWord(ctx, used);
+    const syl = ctx.syllablesOn ? syllabify(word, ctx.step, ctx.overrides, ctx.allWords) : [word];
+    const syllables = syl.length > 1 ? syl : null;
     if (type === 'tiles') {
-      const tiles = segment(word, ctx.learned, ctx.allWords);
+      // build tiles syllable by syllable so no tile crosses a syllable line
+      const tiles = syllables ? syllables.flatMap(p => segment(p, ctx.learned, ctx.allWords)) : segment(word, ctx.learned, ctx.allWords);
       const all = shuffle(tiles.concat(distractorTiles(tiles, ctx.learned)));
-      return { type, word, answer: word, tiles: all, slots: tiles.length };
+      return { type, word, answer: word, tiles: all, slots: tiles.length, syllables };
     }
-    return { type: 'spell', word, answer: word };
+    if (syllables) {
+      // syllable spelling: type into the cards, or switch to tiles
+      const tiles = syllables.flatMap(p => segment(p, ctx.learned, ctx.allWords));
+      return { type: 'spell', word, answer: word, syllables, tiles: shuffle(tiles.concat(distractorTiles(tiles, ctx.learned))) };
+    }
+    return { type: 'spell', word, answer: word, syllables };
   }
 
+  // Syllable answers come in as "bas·ket": the word must be spelled right and
+  // every card must hold a real syllable (a vowel sound). The expected split is
+  // shown in the results, but a reasonable different split isn't marked wrong.
   function checkAnswer(q, value) {
     if (q.type === 'meaning' || q.type === 'sound') return value === q.answer;
-    return normWord(value).replace(/\s+/g, '') === normWord(q.answer);
+    const v = String(value || '');
+    if (v.includes('·')) {
+      const parts = v.split('·').map(normWord);
+      if (parts.some(p => !p || !/[aeiouy]/.test(p))) return false;
+      return parts.join('') === normWord(q.answer);
+    }
+    return normWord(v).replace(/\s+/g, '') === normWord(q.answer);
   }
 
   function promptText(q) {
@@ -416,7 +574,7 @@
 
   function botAnswer(q, accuracy) {
     const right = Math.random() < (accuracy == null ? 0.7 : accuracy);
-    if (right) return { value: q.answer, correct: true };
+    if (right) return { value: q.syllables ? q.syllables.join('·') : q.answer, correct: true };
     if (q.options) {
       const wrong = q.options.filter(o => o !== q.answer);
       return { value: rand(wrong), correct: false };
@@ -443,7 +601,7 @@
   global.WBRBattle = {
     ECON, TIMING, TYPE_LABEL, BOT_NAMES,
     parseWordBox, buildContext, segment, tileColor, learnedGraphemes,
-    makeQuestion, checkAnswer, promptText, resolveRound, winnerOf, roundKind,
+    makeQuestion, checkAnswer, syllabify, syllableOverrides, promptText, resolveRound, winnerOf, roundKind,
     botAnswer, botDelayMs, botShop, shuffle, deriveBase,
   };
 })(typeof window !== 'undefined' ? window : globalThis);
