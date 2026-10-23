@@ -65,17 +65,50 @@ async function fbGetProfile(studentName) {
 
 // ── Lesson Plans ──────────────────────────────────────────
 
+// Shrink a photo/screenshot and turn it into text that can live inside the
+// plan itself. Firebase Storage isn't set up for this project, so uploading
+// there made Save Plan fail; a plan can hold up to ~1 MB, so each image is
+// kept under ~300 KB.
+async function fbImageToDataUrl(file, maxBytes = 300000) {
+  if (!file.type || !file.type.startsWith('image/')) {
+    throw new Error('Only pictures can be saved with a plan (PDFs can\'t). Take a screenshot of the page and upload that instead.');
+  }
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = () => reject(new Error('That picture could not be opened.'));
+      i.src = url;
+    });
+    let width = Math.min(1400, img.naturalWidth || 1400);
+    let quality = 0.78;
+    for (let tries = 0; tries < 12; tries++) {
+      const height = Math.round(width * (img.naturalHeight / img.naturalWidth));
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(img, 0, 0, width, height);
+      const data = canvas.toDataURL('image/jpeg', quality);
+      if (data.length * 0.75 <= maxBytes) return data;
+      if (quality > 0.5) quality -= 0.1; else width = Math.round(width * 0.8);
+    }
+    throw new Error('That picture is too large to save, even after shrinking it.');
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 // Save a plan (lesson or template)
 async function fbSavePlan(planData, existingId) {
-  // Upload any images first
+  // Images are stored inside the plan (see fbImageToDataUrl)
   if (planData._srImageFile) {
-    const path = `lesson-images/${Date.now()}_sr_${planData._srImageFile.name}`;
-    planData.srImageUrl = await fbUploadImage(planData._srImageFile, path);
+    planData.srImageUrl = await fbImageToDataUrl(planData._srImageFile);
     delete planData._srImageFile;
   }
   if (planData._pImageFile) {
-    const path = `lesson-images/${Date.now()}_passage_${planData._pImageFile.name}`;
-    planData.pImageUrl = await fbUploadImage(planData._pImageFile, path);
+    planData.pImageUrl = await fbImageToDataUrl(planData._pImageFile);
     delete planData._pImageFile;
   }
 
@@ -185,6 +218,7 @@ window.fb = {
   getPlan:          fbGetPlan,
   deletePlan:       fbDeletePlan,
   createBattle:     fbCreateBattle,
+  imageToDataUrl:   fbImageToDataUrl,
   uploadImage:      fbUploadImage,
 };
 

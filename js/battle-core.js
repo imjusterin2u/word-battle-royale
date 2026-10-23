@@ -120,7 +120,8 @@
         pick = g; break;
       }
       if (!pick) pick = w[i];
-      out.push({ g: pick, c: tileColor(pick, i, w) });
+      const col = tileColor(pick, i, w);
+      out.push(col === 'suffix' && pick.length > 1 ? affixCard(pick, 'suffix') : col === 'prefix' ? affixCard(pick, 'prefix') : { g: pick, c: col });
       i += pick.length;
     }
     return out;
@@ -135,6 +136,7 @@
 
   // Colour class for a tile, matching the teacher console
   function tileColor(g, index, word) {
+    if (g === 'y' && word && index === word.length - 1 && index > 0 && !VOWELS.has(word[index - 1])) return 'vowel';   // y says /ē/ or /ī/ at the end
     if (g.length === 1) return VOWELS.has(g) ? 'vowel' : 'consonant';
     const c = catOf(g);
     const atEnd = word ? index + g.length === word.length && index >= 3 : false;
@@ -227,10 +229,9 @@
 
   function syllabify(word, step, overrides, known) {
     const w = normWord(word);
-    if (overrides && overrides[w]) return overrides[w].slice();
     const n = stepNum(step);
-    if (!(n >= stepNum(SYLLABLE_START))) return [w];
     let head = [], tail = [], core = w;
+    const meta = { prefix: null, suffix: null };
 
     // suffix first (only ones taught by this step)
     let attach = '';   // -s, -es and -ed that don't add a syllable join the last one
@@ -241,17 +242,19 @@
       if (!nuclei(base).length) continue;
       const vowelSfx = /^[aeiouy]/.test(sfx);
       // -y and -or are easy to mistake for part of the word (enemy, color): only split them off a known base
-      if (known && (sfx === 'y' || sfx === 'or') && !known.has(base) && !deriveBase(core, sfx, known)) continue;
+      const closedEnd = /(ck|ff|ll|ss|zz|sh|ch|th|nd|st|mp|nk|ng|lt|sk|ft|nt|lk)$/.test(base);
+      if (known && (sfx === 'y' || sfx === 'or') && !known.has(base) && !deriveBase(core, sfx, known) && !(sfx === 'y' && closedEnd)) continue;
       if (sfx === 's' || (sfx === 'es' && !/(s|x|z|ch|sh)$/.test(base)) || (sfx === 'ed' && !/[td]$/.test(base))) {
         if (sfx === 'es' && !/(s|x|z|ch|sh)$/.test(base)) { attach = 's'; core = core.slice(0, -1); }
         else { attach = sfx; core = base; }
+        meta.suffix = attach;
         break;
       }
       if (!(CONS_SUFFIX.has(sfx) || VOWEL_SUFFIX_SYLLABLE.has(sfx) || sfx === 'es' || sfx === 'ed')) continue;
       let suffixPart = sfx, b = base;
       // a doubled final consonant splits between the pair (hop|ping), but not bonus letters (spell|ing)
       if (vowelSfx && /([b-dghj-km-rtv-y])\1$/.test(b)) { suffixPart = b.slice(-1) + sfx; b = b.slice(0, -1); }
-      tail = [suffixPart]; core = b;
+      tail = [suffixPart]; core = b; meta.suffix = sfx;
       break;
     }
 
@@ -261,11 +264,14 @@
       const rest = core.slice(p.length);
       return !isVowelAt(rest, 0) && nuclei(rest).length > 0;
     });
-    if (pre && nuclei(core.slice(pre.length)).length) { head = [pre]; core = core.slice(pre.length); }
+    if (pre && nuclei(core.slice(pre.length)).length) { head = [pre]; core = core.slice(pre.length); meta.prefix = pre; }
 
+    const finish = parts => { parts.meta = meta; return parts; };
+    if (overrides && overrides[w]) return finish(overrides[w].slice());
+    if (!(n >= stepNum(SYLLABLE_START))) return finish([w]);
     const parts = head.concat(divideCore(core, n >= 5.1), tail);
     if (attach) parts[parts.length - 1] += attach;
-    return parts.length ? parts : [w];
+    return finish(parts.length ? parts : [w]);
   }
 
   // Teacher can type "bas-ket" or "bas/ket" in the plan to set the division
@@ -372,6 +378,39 @@
     return null;
   }
 
+  // Prefixes and suffixes are taught as whole units, so they come as one
+  // yellow card ("un-", "-ness") instead of separate letters.
+  function affixCard(g, kind) {
+    return { g, c: kind, label: kind === 'prefix' ? g + '-' : '-' + g };
+  }
+
+  function buildWordTiles(word, ctx) {
+    const parts = syllabify(word, ctx.step, ctx.overrides, ctx.allWords);
+    const meta = parts.meta || {};
+    const syll = ctx.syllablesOn && parts.length > 1;
+    const units = syll ? parts.slice() : [normWord(word)];
+    const tiles = [];
+    units.forEach((part, i) => {
+      let rest = part, pre = null, suf = null;
+      if (i === 0 && meta.prefix && rest.startsWith(meta.prefix) && rest.length > meta.prefix.length - (syll ? 1 : 0)) {
+        pre = meta.prefix; rest = rest.slice(pre.length);
+      }
+      if (i === units.length - 1 && meta.suffix && rest.endsWith(meta.suffix)) {
+        suf = meta.suffix; rest = rest.slice(0, -suf.length);
+      }
+      if (pre) tiles.push(affixCard(pre, 'prefix'));
+      if (rest) segment(rest, ctx.learned, ctx.allWords).forEach(t => tiles.push(t));
+      if (suf) tiles.push(affixCard(suf, 'suffix'));
+    });
+    return { tiles, syllables: syll ? parts.slice() : null, suffix: meta.suffix || null };
+  }
+
+  function affixDistractor(ctx, have) {
+    const n = stepNum(ctx.step);
+    const pool = Object.keys(SUFFIX_STEP).filter(x => stepNum(SUFFIX_STEP[x]) <= n && !have.has(x) && x.length > 1);
+    return pool.length ? [affixCard(rand(pool), 'suffix')] : [];
+  }
+
   // ── Question generation ────────────────────────────────────
   function pickWord(ctx, used) {
     const fromCurrent = Math.random() < 0.8;
@@ -443,18 +482,19 @@
       return { type, grapheme: card.grapheme, options: shuffle([right, ...wrong]), answer: right, word: card.grapheme };
     }
     const word = pickWord(ctx, used);
-    const syl = ctx.syllablesOn ? syllabify(word, ctx.step, ctx.overrides, ctx.allWords) : [word];
-    const syllables = syl.length > 1 ? syl : null;
+    // tiles are built syllable by syllable, so none crosses a syllable line
+    const built = buildWordTiles(word, ctx);
+    const syllables = built.syllables;
+    const extras = () => {
+      const d = distractorTiles(built.tiles, ctx.learned);
+      return built.suffix ? d.concat(affixDistractor(ctx, new Set([built.suffix]))) : d;
+    };
     if (type === 'tiles') {
-      // build tiles syllable by syllable so no tile crosses a syllable line
-      const tiles = syllables ? syllables.flatMap(p => segment(p, ctx.learned, ctx.allWords)) : segment(word, ctx.learned, ctx.allWords);
-      const all = shuffle(tiles.concat(distractorTiles(tiles, ctx.learned)));
-      return { type, word, answer: word, tiles: all, slots: tiles.length, syllables };
+      return { type, word, answer: word, tiles: shuffle(built.tiles.concat(extras())), slots: built.tiles.length, syllables };
     }
     if (syllables) {
       // syllable spelling: type into the cards, or switch to tiles
-      const tiles = syllables.flatMap(p => segment(p, ctx.learned, ctx.allWords));
-      return { type: 'spell', word, answer: word, syllables, tiles: shuffle(tiles.concat(distractorTiles(tiles, ctx.learned))) };
+      return { type: 'spell', word, answer: word, syllables, tiles: shuffle(built.tiles.concat(extras())) };
     }
     return { type: 'spell', word, answer: word, syllables };
   }
@@ -601,7 +641,7 @@
   global.WBRBattle = {
     ECON, TIMING, TYPE_LABEL, BOT_NAMES,
     parseWordBox, buildContext, segment, tileColor, learnedGraphemes,
-    makeQuestion, checkAnswer, syllabify, syllableOverrides, promptText, resolveRound, winnerOf, roundKind,
+    makeQuestion, checkAnswer, syllabify, syllableOverrides, buildWordTiles, promptText, resolveRound, winnerOf, roundKind,
     botAnswer, botDelayMs, botShop, shuffle, deriveBase,
   };
 })(typeof window !== 'undefined' ? window : globalThis);

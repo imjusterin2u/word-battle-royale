@@ -302,7 +302,7 @@ select{cursor:pointer;}textarea{resize:vertical;}
         <div class="g3" style="margin-bottom:8px;">
           <div class="col"><label class="fld">Student Reader</label><select id="srReader"><option>AB</option><option>B</option></select></div>
           <div class="col"><label class="fld">Page</label><input id="srPage" placeholder="e.g. p. 28"/></div>
-          <div class="col"><label class="fld">Upload Page Image</label><input type="file" id="srImg" accept="image/*,.pdf" style="font-size:12px;padding:5px;"/></div>
+          <div class="col"><label class="fld">Upload Page Image</label><input type="file" id="srImg" accept="image/*" style="font-size:12px;padding:5px;"/></div>
         </div>
         <div class="col" style="margin-bottom:8px;">
           <label class="fld">Paste Sentence(s) for Marking</label>
@@ -412,7 +412,7 @@ select{cursor:pointer;}textarea{resize:vertical;}
         </div>
         <div class="col" style="margin-bottom:8px;">
           <label class="fld">Upload Passage Page</label>
-          <input type="file" id="pImg" accept="image/*,.pdf" style="font-size:12px;padding:5px;"/>
+          <input type="file" id="pImg" accept="image/*" style="font-size:12px;padding:5px;"/>
           <div id="pImgPreview" style="display:none;margin-top:8px;">
             <img id="pImgEl" style="max-width:100%;max-height:280px;border-radius:8px;border:1px solid var(--border);object-fit:contain;" alt="Passage"/>
             <div style="font-size:11px;color:var(--muted);margin-top:3px;">📱 Student sees this page with scooping and marking tools</div>
@@ -538,9 +538,9 @@ select{cursor:pointer;}textarea{resize:vertical;}
   </div>
 </div>
 
-<script src="js/config.js?v=20261023a"></script>
-<script src="js/game.js?v=20261023a"></script>
-<script type="module" src="js/firebase.js?v=20261023a"></script>
+<script src="js/config.js?v=20261023c"></script>
+<script src="js/game.js?v=20261023c"></script>
+<script type="module" src="js/firebase.js?v=20261023c"></script>
 <script>
 // ── State ──────────────────────────────────────────────
 const S = {
@@ -1073,7 +1073,7 @@ document.getElementById('confirmSavePlanBtn').addEventListener('click', async ()
     alert(updating ? `Plan updated! "${plan.planName}"` : `Plan saved! "${plan.planName}"`);
   } catch (err) {
     console.error('Save error:', err);
-    alert('Error saving plan. Check console for details.');
+    alert('Could not save the plan: ' + (err.message || err.code || 'unknown error'));
   } finally {
     btn.disabled = false; btn.textContent = '💾 Save Plan';
   }

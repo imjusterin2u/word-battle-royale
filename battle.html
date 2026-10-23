@@ -254,8 +254,8 @@ label.lbl{font-size:13px;font-weight:700;color:var(--muted);text-transform:upper
 
 <div class="toast hidden" id="toast"></div>
 
-<script src="js/config.js?v=20261023a"></script>
-<script src="js/battle-core.js?v=20261023a"></script>
+<script src="js/config.js?v=20261023c"></script>
+<script src="js/battle-core.js?v=20261023c"></script>
 <script type="module">
 const B = window.WBRBattle;
 const { ECON, TIMING } = B;
@@ -597,12 +597,12 @@ function drawQuestion(r) {
         <button class="btn btn-sm" id="modeTiles" type="button">🧩 Tiles</button>
       </div>
       <div class="sylcards" id="sylcards"></div>
-      <div class="tray hidden" id="tray">${q.tiles ? q.tiles.map((t, i) => `<button class="tile ${esc(t.c)}" data-i="${i}" type="button">${esc(t.g)}</button>`).join('') : ''}</div>
+      <div class="tray hidden" id="tray">${q.tiles ? q.tiles.map((t, i) => `<button class="tile ${esc(t.c)}" data-i="${i}" type="button">${esc(t.label || t.g)}</button>`).join('') : ''}</div>
       <div class="actions"><button class="btn" id="clearBtn" type="button">↺ Clear</button><button class="btn btn-ok" id="submitBtn" type="button">✔ Submit</button></div>`;
   } else if (q.type === 'tiles') {
     html += `<div class="qprompt">Listen and build the word</div>${listen}
       <div class="slotsrow" id="built"></div>
-      <div class="tray" id="tray">${q.tiles.map((t, i) => `<button class="tile ${esc(t.c)}" data-i="${i}" type="button">${esc(t.g)}</button>`).join('')}</div>
+      <div class="tray" id="tray">${q.tiles.map((t, i) => `<button class="tile ${esc(t.c)}" data-i="${i}" type="button">${esc(t.label || t.g)}</button>`).join('')}</div>
       <div class="actions"><button class="btn" id="clearBtn" type="button">↺ Clear</button><button class="btn btn-ok" id="submitBtn" type="button">✔ Submit</button></div>`;
   } else if (q.type === 'spell') {
     html += `<div class="qprompt">Listen and spell the word</div>${listen}
@@ -633,7 +633,7 @@ function drawQuestion(r) {
     const tray = $('tray'), built = $('built');
     const drawBuilt = () => {
       built.innerHTML = qState.picked.length
-        ? qState.picked.map((i, k) => `<button class="tile ${esc(q.tiles[i].c)}" data-k="${k}" type="button">${esc(q.tiles[i].g)}</button>`).join('')
+        ? qState.picked.map((i, k) => `<button class="tile ${esc(q.tiles[i].c)}" data-k="${k}" type="button">${esc(q.tiles[i].label || q.tiles[i].g)}</button>`).join('')
         : Array.from({ length: q.slots || 3 }, () => '<span class="tile ph"></span>').join('');
       tray.querySelectorAll('.tile').forEach(b => b.classList.toggle('used', qState.picked.includes(+b.dataset.i)));
       built.querySelectorAll('[data-k]').forEach(b => b.onclick = () => { qState.picked.splice(+b.dataset.k, 1); drawBuilt(); });
@@ -716,7 +716,7 @@ function drawSyl(q, focus) {
   } else {
     box.innerHTML = qState.cards.map((c, i) =>
       `<div class="sylcard ${i === qState.active ? 'active' : ''}" data-s="${i}" tabindex="0" aria-label="Syllable card ${i + 1}">
-        ${c.length ? c.map((ti, k) => `<button class="tile ${esc(q.tiles[ti].c)}" data-k="${k}" type="button">${esc(q.tiles[ti].g)}</button>`).join('') : '<span class="ph">tap, then add tiles</span>'}
+        ${c.length ? c.map((ti, k) => `<button class="tile ${esc(q.tiles[ti].c)}" data-k="${k}" type="button">${esc(q.tiles[ti].label || q.tiles[ti].g)}</button>`).join('') : '<span class="ph">tap, then add tiles</span>'}
       </div>`).join('');
     box.querySelectorAll('.sylcard').forEach(card => {
       card.onclick = e => {
