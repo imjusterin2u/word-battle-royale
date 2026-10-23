@@ -2111,6 +2111,7 @@ const SOUND_CARDS = [
   { grapheme:'i', step:'1.1', cat:'vowel', sounds:[{p:'/ĭ/',k:'itch'},{p:'/ī/',k:'pine',sub:'4.1'},{p:'/ī/',k:'hi',sub:'5.1'},{p:'/ə/',k:'animal',sub:'5.5'},{p:'/ē/',k:'champion',sub:'11.5'}] },
   { grapheme:'o', step:'1.1', cat:'vowel', sounds:[{p:'/ŏ/',k:'octopus'},{p:'/ō/',k:'cone',sub:'4.1'},{p:'/ō/',k:'no',sub:'5.1'}] },
   { grapheme:'u', step:'1.2', cat:'vowel', sounds:[{p:'/ŭ/',k:'up'},{p:'/ū/',k:'mule',sub:'4.1'},{p:'/ü/',k:'rule',sub:'4.1'},{p:'/ū/',k:'pupil',sub:'5.1'},{p:'/ü/',k:'flu',sub:'5.1'}] },
+  { grapheme:'y', step:'5.1', cat:'vowel', sounds:[{p:'/ī/',k:'cry'},{p:'/ē/',k:'baby'}] },
   { grapheme:'ə', step:'3.1', cat:'vowel', sounds:[{p:'/ə/',k:'wagon'}] },
   // Welded sounds
   { grapheme:'all',step:'1.4', cat:'welded', sounds:[{p:'/ôl/',k:'ball'}] },
